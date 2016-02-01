@@ -19,7 +19,16 @@ XFCP_Litespeedcache_Extend_XenForo_Model_User
 		$parentReturn = parent::validateAuthentication($nameOrEmail, $password, $error) ;
 		if ( $parentReturn ) {
 			// has to call php function directly to avoid xf prefix
-			setcookie('_lscache_vary', 1);
+
+			$secure = XenForo_Application::$secure;
+			$httpOnly = true;
+
+			$cookieConfig = XenForo_Application::get('config')->cookie;
+			$path = $cookieConfig->path;
+			$domain = $cookieConfig->domain;
+			$name = '_lscache_vary';
+
+			setcookie($name, 1, 0, $path, $domain, $secure, $httpOnly);
 		}
 		return $parentReturn ;
 	}

@@ -20,11 +20,21 @@ class Litespeedcache_Listener_Global
 	 */
 	public static function extendUserModel( $class, &$extend )
 	{
-		$extend[] = 'Litespeedcache_Extend_XenForo_Model_User' ;
+		if (Litespeedcache_Listener_Global::lscache_enabled()) {
+			$extend[] = 'Litespeedcache_Extend_XenForo_Model_User' ;
+		}
+	}
+
+	public static function lscache_enabled()
+	{
+        return (isset($_SERVER['X-LSCACHE']) && $_SERVER['X-LSCACHE']);
 	}
 
 	public static function frontControllerPostView( XenForo_FrontController $fc, &$output )
 	{
+		if (!Litespeedcache_Listener_Global::lscache_enabled())
+			return;
+
 		$response = $fc->getResponse() ;
 		$cacheable = true ;
 		$uri = $fc->getRequest()->getRequestUri();

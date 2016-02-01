@@ -30,6 +30,27 @@ class Litespeedcache_Listener_Global
         return (isset($_SERVER['X-LSCACHE']) && $_SERVER['X-LSCACHE']);
 	}
 
+	public static function setCacheVaryCookie($value)
+	{
+		// has to call php function directly to avoid xf prefix
+
+		$secure = XenForo_Application::$secure;
+		$httpOnly = true;
+
+		$cookieConfig = XenForo_Application::get('config')->cookie;
+		$path = $cookieConfig->path;
+		$domain = $cookieConfig->domain;
+		$name = '_lscache_vary'; // fixed name, cannot change
+		$expiration = 0;
+
+		if ($value === false)
+		{
+			$expiration = XenForo_Application::$time - 86400 * 365;
+		}
+
+		setcookie($name, $value, $expiration, $path, $domain, $secure, $httpOnly);
+	}
+
 	public static function frontControllerPostView( XenForo_FrontController $fc, &$output )
 	{
 		if (!Litespeedcache_Listener_Global::lscache_enabled())
@@ -46,13 +67,15 @@ class Litespeedcache_Listener_Global
 		}
 
 		if ( $cacheable ) {
+			if (isset($_COOKIE[$name])) {
+				self::setCacheVaryCookie(false);
+			}
 			$maxage = XenForo_Application::getOptions()->litespeedcacheXF_publicttl ;
 			$cache_header = 'public,max-age=' . $maxage ;
 			$response->setHeader('X-LiteSpeed-Cache-Control', $cache_header) ;
 		}
 		else {
 			$response->setHeader('X-LiteSpeed-Cache-Control', 'no-cache') ;
-			//error_log('Cache set to NO');
 		}
 	}
 

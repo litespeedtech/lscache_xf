@@ -17,7 +17,7 @@ class Litespeedcache_Options
 
 	public static function verifyTTL( $publicttl, XenForo_DataWriter $dw, $fieldname )
 	{
-		if ( $publicttl === '' || $publicttl < 60 ) {
+		if ( $publicttl == '' || intval($publicttl) != $publicttl || $publicttl < 60 ) {
 			$dw->error(new XenForo_Phrase('Public TTL must be set to a numeric value of  60 seconds or greater.'), $fieldname) ;
 			return false ;
 		}

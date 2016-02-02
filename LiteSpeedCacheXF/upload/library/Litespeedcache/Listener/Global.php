@@ -59,7 +59,12 @@ class Litespeedcache_Listener_Global
 		$response = $fc->getResponse() ;
 		$cacheable = true ;
 		$uri = $fc->getRequest()->getRequestUri() ;
-		if ( strpos($uri, '/admin.php') !== FALSE ) {
+
+		if ( XenForo_Helper_Cookie::getCookie('user') ) {
+			self::setCacheVaryCookie(true) ;
+			$cacheable = false ;
+		}
+		if ( strpos($uri, '/admin.php') !== false ) {
 			$cacheable = false ;
 		}
 		else if ( XenForo_Visitor::getUserId() ) {

@@ -8,7 +8,7 @@
  * License URI:       http://www.gnu.org/licenses/gpl.html
  *
  * Copyright (C) 2016 LiteSpeed Technologies, Inc.
-*/
+ */
 
 class Litespeedcache_Extend_XenForo_Model_User extends
 XFCP_Litespeedcache_Extend_XenForo_Model_User
@@ -18,7 +18,7 @@ XFCP_Litespeedcache_Extend_XenForo_Model_User
 	{
 		$parentReturn = parent::validateAuthentication($nameOrEmail, $password, $error) ;
 		if ( $parentReturn ) {
-			Litespeedcache_Listener_Global::setCacheVaryCookie(true);
+			Litespeedcache_Listener_Global::setCacheVaryCookie(true) ;
 		}
 		return $parentReturn ;
 	}

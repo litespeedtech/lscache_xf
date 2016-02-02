@@ -8,12 +8,21 @@
  * License URI:       http://www.gnu.org/licenses/gpl.html
  *
  * Copyright (C) 2016 LiteSpeed Technologies, Inc.
-*/
+ */
 
 class Litespeedcache_Options
 {
 
 //Validates admin settings
+
+	public static function verifyLSCache()
+	{
+
+		if ( ! Litespeedcache_Listener_Global::lscache_enabled() ) {
+			return '<div class="alertText">Notice: Your installation of LiteSpeed Web Server does not have LSCache enabled. This plugin will NOT work properly.</div><br />' ;
+		}
+		return ;
+	}
 
 	public static function verifyTTL( $publicttl, XenForo_DataWriter $dw, $fieldname )
 	{

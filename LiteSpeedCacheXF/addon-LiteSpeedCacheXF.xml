@@ -18,6 +18,12 @@
   <email_template_modifications/>
   <optiongroups>
     <group group_id="LiteSpeedCacheXF" display_order="1000" debug_only="0"/>
+    <option option_id="litespeedcacheXF_lscache" edit_format="callback" data_type="boolean" can_backup="1">
+      <default_value></default_value>
+      <edit_format_params>Litespeedcache_Options::verifyLSCache</edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="LiteSpeedCacheXF" display_order="1"/>
+    </option>
   </optiongroups>
   <permissions>
     <permission_groups/>
@@ -29,6 +35,8 @@
     <phrase title="admin_navigation_lscache_settings" version_id="1010070" version_string="1.1.0"><![CDATA[Settings]]></phrase>
     <phrase title="option_group_LiteSpeedCacheXF" version_id="1" version_string="1.0.0"><![CDATA[Litespeed Cache]]></phrase>
     <phrase title="option_group_LiteSpeedCacheXF_description" version_id="1" version_string="1.0.0"><![CDATA[]]></phrase>
+    <phrase title="option_litespeedcacheXF_lscache" version_id="1" version_string="1.0.0"><![CDATA[LiteSpeed Cache Check]]></phrase>
+    <phrase title="option_litespeedcacheXF_lscache_explain" version_id="1" version_string="1.0.0"><![CDATA[Checks for LSCache.]]></phrase>
   </phrases>
   <route_prefixes/>
   <style_properties/>

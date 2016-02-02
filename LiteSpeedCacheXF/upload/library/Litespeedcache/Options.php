@@ -21,7 +21,6 @@ class Litespeedcache_Options
 		if ( ! Litespeedcache_Listener_Global::lscache_enabled() ) {
 			return '<div class="alertText">Notice: Your installation of LiteSpeed Web Server does not have LSCache enabled. This plugin will NOT work properly.</div><br />' ;
 		}
-		return ;
 	}
 
 	public static function verifyTTL( $publicttl, XenForo_DataWriter $dw, $fieldname )

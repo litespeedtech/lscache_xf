@@ -8,58 +8,58 @@
  * License URI:       http://www.gnu.org/licenses/gpl.html
  *
  * Copyright (C) 2016 LiteSpeed Technologies, Inc.
-*/
-
+ */
 
 class Litespeedcache_Listener_Global
 {
+
+	const cookieName = '_lscache_vary' ; // fixed name, cannot change
 
 	/**
 	 * @xfcp: XenForo_Model_User
 	 *
 	 */
+
 	public static function extendUserModel( $class, &$extend )
 	{
-		if (Litespeedcache_Listener_Global::lscache_enabled()) {
+		if ( Litespeedcache_Listener_Global::lscache_enabled() ) {
 			$extend[] = 'Litespeedcache_Extend_XenForo_Model_User' ;
 		}
 	}
 
 	public static function lscache_enabled()
 	{
-        return (isset($_SERVER['X-LSCACHE']) && $_SERVER['X-LSCACHE']);
+		return (isset($_SERVER['X-LSCACHE']) && $_SERVER['X-LSCACHE']) ;
 	}
 
-	public static function setCacheVaryCookie($value)
+	public static function setCacheVaryCookie( $value )
 	{
 		// has to call php function directly to avoid xf prefix
 
-		$secure = XenForo_Application::$secure;
-		$httpOnly = true;
+		$secure = XenForo_Application::$secure ;
+		$httpOnly = true ;
 
-		$cookieConfig = XenForo_Application::get('config')->cookie;
-		$path = $cookieConfig->path;
-		$domain = $cookieConfig->domain;
-		$name = '_lscache_vary'; // fixed name, cannot change
-		$expiration = 0;
+		$cookieConfig = XenForo_Application::get('config')->cookie ;
+		$path = $cookieConfig->path ;
+		$domain = $cookieConfig->domain ;
+		$expiration = 0 ;
 
-		if ($value === false)
-		{
-			$expiration = XenForo_Application::$time - 86400 * 365;
+		if ( $value === false ) {
+			$expiration = XenForo_Application::$time - 86400 * 365 ;
 		}
 
-		setcookie($name, $value, $expiration, $path, $domain, $secure, $httpOnly);
+		setcookie(self::cookieName, $value, $expiration, $path, $domain, $secure, $httpOnly) ;
 	}
 
 	public static function frontControllerPostView( XenForo_FrontController $fc, &$output )
 	{
-		if (!Litespeedcache_Listener_Global::lscache_enabled())
-			return;
+		if ( ! Litespeedcache_Listener_Global::lscache_enabled() )
+			return ;
 
 		$response = $fc->getResponse() ;
 		$cacheable = true ;
-		$uri = $fc->getRequest()->getRequestUri();
-		if (strpos($uri, '/admin.php') !== FALSE) {
+		$uri = $fc->getRequest()->getRequestUri() ;
+		if ( strpos($uri, '/admin.php') !== FALSE ) {
 			$cacheable = false ;
 		}
 		else if ( XenForo_Visitor::getUserId() ) {
@@ -67,8 +67,8 @@ class Litespeedcache_Listener_Global
 		}
 
 		if ( $cacheable ) {
-			if (isset($_COOKIE[$name])) {
-				self::setCacheVaryCookie(false);
+			if ( isset($_COOKIE[self::cookieName]) ) {
+				self::setCacheVaryCookie(false) ;
 			}
 			$maxage = XenForo_Application::getOptions()->litespeedcacheXF_publicttl ;
 			$cache_header = 'public,max-age=' . $maxage ;

@@ -23,4 +23,22 @@ XFCP_Litespeedcache_Extend_XenForo_Model_User
 		return $parentReturn ;
 	}
 
+	/**
+	 * Sets the user remember cookie for the specified user ID.
+	 *
+	 * @param integer $userId
+	 * @param array|false|null $auth User's auth record (retrieved if null)
+	 *
+	 * @return boolean
+	 */
+	public function setUserRememberCookie($userId, $auth = null)
+	{
+		$parentReturn = parent::setUserRememberCookie($userId, $auth);
+		if ($parentReturn) {
+			// use same length as parent
+			Litespeedcache_Listener_Global::setCacheVaryCookie(30 * 86400) ;
+		}
+		return $parentReturn ;
+	}
+
 }

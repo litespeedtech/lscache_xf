@@ -47,7 +47,13 @@ class Litespeedcache_Listener_Global
 		if ( $value === false ) {
 			$expiration = XenForo_Application::$time - 86400 * 365 ;
 		}
-
+		else if ($value === true) {
+			$expiration = 0; // default only for current session
+		}
+		else {
+			// stay logged in, same as xf_usr
+			$expiration = $value;
+		}
 		setcookie(self::cookieName, $value, $expiration, $path, $domain, $secure, $httpOnly) ;
 	}
 
@@ -60,14 +66,10 @@ class Litespeedcache_Listener_Global
 		$cacheable = true ;
 		$uri = $fc->getRequest()->getRequestUri() ;
 
-		if ( XenForo_Helper_Cookie::getCookie('user') ) {
-			self::setCacheVaryCookie(true) ;
-			$cacheable = false ;
-		}
-		if ( strpos($uri, '/admin.php') !== false ) {
-			$cacheable = false ;
-		}
-		else if ( XenForo_Visitor::getUserId() ) {
+
+		if ( XenForo_Visitor::getUserId()
+				|| (strpos($uri, '/admin.php') !== false)
+				|| XenForo_Helper_Cookie::getCookie('user')) {
 			$cacheable = false ;
 		}
 

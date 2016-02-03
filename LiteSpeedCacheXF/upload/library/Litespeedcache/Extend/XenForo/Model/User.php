@@ -18,7 +18,7 @@ XFCP_Litespeedcache_Extend_XenForo_Model_User
 	{
 		$parentReturn = parent::validateAuthentication($nameOrEmail, $password, $error) ;
 		if ( $parentReturn ) {
-			Litespeedcache_Listener_Global::setCacheVaryCookie(true) ;
+			Litespeedcache_Listener_Global::setUserState(Litespeedcache_Listener_Global::STATE_LOGGEDIN) ;
 		}
 		return $parentReturn ;
 	}
@@ -36,7 +36,7 @@ XFCP_Litespeedcache_Extend_XenForo_Model_User
 		$parentReturn = parent::setUserRememberCookie($userId, $auth);
 		if ($parentReturn) {
 			// use same length as parent
-			Litespeedcache_Listener_Global::setCacheVaryCookie(30 * 86400) ;
+			Litespeedcache_Listener_Global::setUserState(Litespeedcache_Listener_Global::STATE_STAYLOGGEDIN) ;
 		}
 		return $parentReturn ;
 	}

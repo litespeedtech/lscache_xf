@@ -14,6 +14,10 @@ class Litespeedcache_Listener_Global
 {
 
 	const cookieName = '_lscache_vary' ; // fixed name, cannot change
+	const STATE_LOGGEDIN = 1;
+	const STATE_STAYLOGGEDIN = 2;
+
+	private static $_userState = 0;
 
 	/**
 	 * @xfcp: XenForo_Model_User
@@ -32,7 +36,12 @@ class Litespeedcache_Listener_Global
 		return (isset($_SERVER['X-LSCACHE']) && $_SERVER['X-LSCACHE']) ;
 	}
 
-	public static function setCacheVaryCookie( $value )
+	public static function setUserState($value)
+	{
+		self::$_userState |= $value;
+	}
+
+	private static function setCacheVaryCookie( $value )
 	{
 		// has to call php function directly to avoid xf prefix
 
@@ -43,18 +52,21 @@ class Litespeedcache_Listener_Global
 		$path = $cookieConfig->path ;
 		$domain = $cookieConfig->domain ;
 		$expiration = 0 ;
+		$cookieValue = 1;
 
 		if ( $value === false ) {
 			$expiration = XenForo_Application::$time - 86400 * 365 ;
+			$cookieValue = 0;
 		}
 		else if ($value === true) {
 			$expiration = 0; // default only for current session
 		}
 		else {
 			// stay logged in, same as xf_usr
-			$expiration = $value;
+			$expiration = XenForo_Application::$time + $value;
 		}
-		setcookie(self::cookieName, $value, $expiration, $path, $domain, $secure, $httpOnly) ;
+		setcookie(self::cookieName, $cookieValue, $expiration, $path, $domain, $secure, $httpOnly) ;
+
 	}
 
 	public static function frontControllerPostView( XenForo_FrontController $fc, &$output )
@@ -82,8 +94,16 @@ class Litespeedcache_Listener_Global
 			$response->setHeader('X-LiteSpeed-Cache-Control', $cache_header) ;
 		}
 		else {
+			if ((self::$_userState & self::STATE_STAYLOGGEDIN) == self::STATE_STAYLOGGEDIN) {
+				self::setCacheVaryCookie(30 * 86400) ;
+			}
+			elseif ((self::$_userState & self::STATE_LOGGEDIN) == self::STATE_LOGGEDIN) {
+				self::setCacheVaryCookie(true) ;
+			}
 			$response->setHeader('X-LiteSpeed-Cache-Control', 'no-cache') ;
 		}
+
+		XenForo_Helper_Cookie::setCookie('lsc_active',1);
 	}
 
 }

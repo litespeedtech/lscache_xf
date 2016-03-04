@@ -98,7 +98,14 @@ class Litespeedcache_Listener_Global
 			}
 			$response->setHeader('X-LiteSpeed-Cache-Control', 'no-cache') ;
 		}
-		$response->setHeader('LSC-Cookie', 'lsc_active=1') ; // special header used by LSWS
+		/* This header is used to handle XenForo's cookie detection.
+		 * When a user attempts to log in, XenForo will check if his/her request
+		 * has a cookie. If not, XenForo will return that it requires cookie support.
+		 * This header makes it so that pages served from LiteSpeed Cache will include a 
+		 * 'Set-Cookie: lsc_active=1' header, so that when a client tries to log in,
+		 * there will be a cookie set, passing the cookie detection.
+		 */
+		$response->setHeader('LSC-Cookie', 'lsc_active=1') ;
 	}
 
 }

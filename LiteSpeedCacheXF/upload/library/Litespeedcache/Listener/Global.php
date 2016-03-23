@@ -13,11 +13,13 @@
 class Litespeedcache_Listener_Global
 {
 
-	const COOKIE_LSCACHE_VARY = '_lscache_vary' ; // fixed name, cannot change
+	const COOKIE_LSCACHE_VARY_DEFAULT = '_lscache_vary' ; // fixed name, cannot change
+	const COOKIE_LSCACHE_VARY_NAME = 'LSCACHE_VARY_COOKIE';
 	const STATE_LOGGEDIN = 1 ;
 	const STATE_STAYLOGGEDIN = 2 ;
 
-	private static $_userState = 0 ;
+	private static $userState = 0 ;
+	private static $currentVary ;
 
 	/**
 	 * @xfcp: XenForo_Model_User
@@ -37,7 +39,7 @@ class Litespeedcache_Listener_Global
 
 	public static function setUserState( $value )
 	{
-		self::$_userState |= $value ;
+		self::$userState |= $value ;
 	}
 
 	private static function setCacheVaryCookie( $value )
@@ -64,7 +66,7 @@ class Litespeedcache_Listener_Global
 			// stay logged in, same as xf_usr
 			$expiration = XenForo_Application::$time + $value ;
 		}
-		setcookie(self::COOKIE_LSCACHE_VARY, $cookieValue, $expiration, $path, $domain, $secure, $httpOnly) ;
+		setcookie(self::$currentVary, $cookieValue, $expiration, $path, $domain, $secure, $httpOnly) ;
 	}
 
 	public static function frontControllerPostView( XenForo_FrontController $fc, &$output )
@@ -80,9 +82,16 @@ class Litespeedcache_Listener_Global
 		if ( XenForo_Visitor::getUserId() || (strpos($uri, '/admin.php') !== false) || XenForo_Helper_Cookie::getCookie('user') ) {
 			$cacheable = false ;
 		}
+		
+		if ( isset($_SERVER[self::COOKIE_LSCACHE_VARY_NAME])) {
+			self::$currentVary = $_SERVER[self::COOKIE_LSCACHE_VARY_NAME];
+		}
+		else {
+			self::$currentVary = self::COOKIE_LSCACHE_VARY_DEFAULT;
+		}
 
 		if ( $cacheable ) {
-			if ( isset($_COOKIE[self::COOKIE_LSCACHE_VARY]) ) {
+			if ( isset($_COOKIE[self::$currentVary]) ) {
 				self::setCacheVaryCookie(false) ;
 			}
 			$maxage = XenForo_Application::getOptions()->litespeedcacheXF_publicttl ;
@@ -90,10 +99,10 @@ class Litespeedcache_Listener_Global
 			$response->setHeader('X-LiteSpeed-Cache-Control', $cache_header) ;
 		}
 		else {
-			if ( (self::$_userState & self::STATE_STAYLOGGEDIN) == self::STATE_STAYLOGGEDIN ) {
+			if ( (self::$userState & self::STATE_STAYLOGGEDIN) == self::STATE_STAYLOGGEDIN ) {
 				self::setCacheVaryCookie(30 * 86400) ;
 			}
-			elseif ( (self::$_userState & self::STATE_LOGGEDIN) == self::STATE_LOGGEDIN ) {
+			elseif ( (self::$userState & self::STATE_LOGGEDIN) == self::STATE_LOGGEDIN ) {
 				self::setCacheVaryCookie(true) ;
 			}
 			$response->setHeader('X-LiteSpeed-Cache-Control', 'no-cache') ;

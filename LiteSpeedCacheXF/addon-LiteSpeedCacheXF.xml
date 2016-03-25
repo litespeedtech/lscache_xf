@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<addon addon_id="LiteSpeedCacheXF" title="LiteSpeed Cache" version_string="1.0.0" version_id="1" url="https://www.litespeedtech.com/support/wiki/doku.php/litespeed_wiki:cache" install_callback_class="" install_callback_method="" uninstall_callback_class="" uninstall_callback_method="">
+<addon addon_id="LiteSpeedCacheXF" title="LiteSpeed Cache" version_string="1.0.1" version_id="1" url="https://www.litespeedtech.com/support/wiki/doku.php/litespeed_wiki:cache" install_callback_class="" install_callback_method="" uninstall_callback_class="" uninstall_callback_method="">
   <admin_navigation>
     <navigation navigation_id="litespeedcache" parent_navigation_id="setup" display_order="110" link="" admin_permission_id="" debug_only="0" hide_no_children="0"/>
     <navigation navigation_id="lscache_settings" parent_navigation_id="litespeedcache" display_order="1" link="options/list/LiteSpeedCacheXF" admin_permission_id="option" debug_only="0" hide_no_children="0"/>
@@ -37,8 +37,8 @@
     <interface_groups/>
   </permissions>
   <phrases>
-    <phrase title="admin_navigation_litespeedcache" version_id="1010070" version_string="1.1.0"><![CDATA[LiteSpeed Cache]]></phrase>
-    <phrase title="admin_navigation_lscache_settings" version_id="1010070" version_string="1.1.0"><![CDATA[Settings]]></phrase>
+    <phrase title="admin_navigation_litespeedcache" version_id="1010070" version_string="1.0.0"><![CDATA[LiteSpeed Cache]]></phrase>
+    <phrase title="admin_navigation_lscache_settings" version_id="1010070" version_string="1.0.0"><![CDATA[Settings]]></phrase>
     <phrase title="option_group_LiteSpeedCacheXF" version_id="1" version_string="1.0.0"><![CDATA[Litespeed Cache]]></phrase>
     <phrase title="option_group_LiteSpeedCacheXF_description" version_id="1" version_string="1.0.0"><![CDATA[]]></phrase>
     <phrase title="option_litespeedcacheXF_lscache" version_id="1" version_string="1.0.0"><![CDATA[LiteSpeed Cache Check]]></phrase>

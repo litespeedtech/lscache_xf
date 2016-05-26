@@ -13,13 +13,11 @@
 class Litespeedcache_Listener_Global
 {
 
-	const COOKIE_LSCACHE_VARY_DEFAULT = '_lscache_vary' ; // fixed name, cannot change
-	const COOKIE_LSCACHE_VARY_NAME = 'LSCACHE_VARY_COOKIE';
+	const COOKIE_LSCACHE_VARY = '_lscache_vary' ; // fixed name, cannot change
 	const STATE_LOGGEDIN = 1 ;
 	const STATE_STAYLOGGEDIN = 2 ;
 
-	private static $userState = 0 ;
-	private static $currentVary ;
+	private static $_userState = 0 ;
 
 	/**
 	 * @xfcp: XenForo_Model_User
@@ -39,7 +37,7 @@ class Litespeedcache_Listener_Global
 
 	public static function setUserState( $value )
 	{
-		self::$userState |= $value ;
+		self::$_userState |= $value ;
 	}
 
 	private static function setCacheVaryCookie( $value )
@@ -66,7 +64,7 @@ class Litespeedcache_Listener_Global
 			// stay logged in, same as xf_usr
 			$expiration = XenForo_Application::$time + $value ;
 		}
-		setcookie(self::$currentVary, $cookieValue, $expiration, $path, $domain, $secure, $httpOnly) ;
+		setcookie(self::COOKIE_LSCACHE_VARY, $cookieValue, $expiration, $path, $domain, $secure, $httpOnly) ;
 	}
 
 	public static function frontControllerPostView( XenForo_FrontController $fc, &$output )
@@ -83,15 +81,8 @@ class Litespeedcache_Listener_Global
 			$cacheable = false ;
 		}
 
-		if ( isset($_SERVER[self::COOKIE_LSCACHE_VARY_NAME])) {
-			self::$currentVary = $_SERVER[self::COOKIE_LSCACHE_VARY_NAME];
-		}
-		else {
-			self::$currentVary = self::COOKIE_LSCACHE_VARY_DEFAULT;
-		}
-
 		if ( $cacheable ) {
-			if ( isset($_COOKIE[self::$currentVary]) ) {
+			if ( isset($_COOKIE[self::COOKIE_LSCACHE_VARY]) ) {
 				self::setCacheVaryCookie(false) ;
 			}
 			$maxage = XenForo_Application::getOptions()->litespeedcacheXF_publicttl ;
@@ -99,22 +90,15 @@ class Litespeedcache_Listener_Global
 			$response->setHeader('X-LiteSpeed-Cache-Control', $cache_header) ;
 		}
 		else {
-			if ( (self::$userState & self::STATE_STAYLOGGEDIN) == self::STATE_STAYLOGGEDIN ) {
+			if ( (self::$_userState & self::STATE_STAYLOGGEDIN) == self::STATE_STAYLOGGEDIN ) {
 				self::setCacheVaryCookie(30 * 86400) ;
 			}
-			elseif ( (self::$userState & self::STATE_LOGGEDIN) == self::STATE_LOGGEDIN ) {
+			elseif ( (self::$_userState & self::STATE_LOGGEDIN) == self::STATE_LOGGEDIN ) {
 				self::setCacheVaryCookie(true) ;
 			}
 			$response->setHeader('X-LiteSpeed-Cache-Control', 'no-cache') ;
 		}
-		/* This header is used to handle XenForo's cookie detection.
-		 * When a user attempts to log in, XenForo will check if his/her request
-		 * has a cookie. If not, XenForo will return that it requires cookie support.
-		 * This header makes it so that pages served from LiteSpeed Cache will include a
-		 * 'Set-Cookie: lsc_active=1' header, so that when a client tries to log in,
-		 * there will be a cookie set, passing the cookie detection.
-		 */
-		$response->setHeader('LSC-Cookie', 'lsc_active=1') ;
+		$response->setHeader('LSC-Cookie', 'lsc_active=1') ; // special header used by LSWS
 	}
 
 }

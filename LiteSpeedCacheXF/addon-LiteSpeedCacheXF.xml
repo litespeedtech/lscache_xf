@@ -1,12 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <addon addon_id="LiteSpeedCacheXF" title="LiteSpeed Cache" version_string="1.0.1" version_id="1" url="https://www.litespeedtech.com/support/wiki/doku.php/litespeed_wiki:cache" install_callback_class="" install_callback_method="" uninstall_callback_class="" uninstall_callback_method="">
   <admin_navigation>
+    <navigation navigation_id="actions" parent_navigation_id="lscache" display_order="1" link="lscache/actions" admin_permission_id="option" debug_only="0" hide_no_children="0"/>
     <navigation navigation_id="litespeedcache" parent_navigation_id="setup" display_order="110" link="" admin_permission_id="" debug_only="0" hide_no_children="0"/>
+    <navigation navigation_id="lscache" parent_navigation_id="" display_order="70" link="lscache" admin_permission_id="option" debug_only="0" hide_no_children="0"/>
     <navigation navigation_id="lscache_settings" parent_navigation_id="litespeedcache" display_order="1" link="options/list/LiteSpeedCacheXF" admin_permission_id="option" debug_only="0" hide_no_children="0"/>
   </admin_navigation>
   <admin_permissions/>
   <admin_style_properties/>
-  <admin_templates/>
+  <admin_templates>
+    <template title="lscacheactions"><![CDATA[<xen:title>{xen:phrase lscache_actionstitle}</xen:title>
+
+<h3>{xen:phrase lscache_actionsdesc}</h3>
+<xen:form action="{xen:adminlink 'lscache/actions'}" class="AutoValidator">
+  <dl class="ctrlUnit">
+    <dt>
+      <input type="submit" name="lscache_action_submit" value="{xen:phrase lscache_purge_all}" class="button" />
+    </dt>
+    <dd>
+      <p>{xen:phrase lscache_purge_all_desc}</p>
+    </dd>
+  </dl>
+</xen:form>]]></template>
+    <template title="lscachemanageinfo"><![CDATA[<xen:title>{xen:phrase lscache_managetitle}</xen:title>
+
+<p>{xen:phrase lscache_managedesc}</p>
+]]></template>
+  </admin_templates>
   <admin_template_modifications/>
   <code_events/>
   <code_event_listeners>
@@ -37,8 +57,16 @@
     <interface_groups/>
   </permissions>
   <phrases>
+    <phrase title="admin_navigation_actions" version_id="1" version_string="1.0.1"><![CDATA[Actions]]></phrase>
     <phrase title="admin_navigation_litespeedcache" version_id="1010070" version_string="1.0.0"><![CDATA[LiteSpeed Cache]]></phrase>
+    <phrase title="admin_navigation_lscache" version_id="1" version_string="1.0.1"><![CDATA[LiteSpeed Cache Management]]></phrase>
     <phrase title="admin_navigation_lscache_settings" version_id="1010070" version_string="1.0.0"><![CDATA[Settings]]></phrase>
+    <phrase title="lscache_actionstitle" version_id="1" version_string="1.0.1"><![CDATA[Actions]]></phrase>
+    <phrase title="lscache_managedesc" version_id="1" version_string="1.0.1"><![CDATA[This is the LiteSpeed Cache Control Panel. Certain controls are available for use here.]]></phrase>
+    <phrase title="lscache_managetitle" version_id="1" version_string="1.0.1"><![CDATA[LiteSpeed Cache Control Panel]]></phrase>
+    <phrase title="lscache_purge_all" version_id="1" version_string="1.0.1"><![CDATA[Purge All]]></phrase>
+    <phrase title="lscache_purge_all_desc" version_id="1" version_string="1.0.1"><![CDATA[Purge All will purge everything related to this XenForo forum from the cache.]]></phrase>
+    <phrase title="lscache_purge_success" version_id="1" version_string="1.0.1"><![CDATA[Purged the cache successfully.]]></phrase>
     <phrase title="option_group_LiteSpeedCacheXF" version_id="1" version_string="1.0.0"><![CDATA[Litespeed Cache]]></phrase>
     <phrase title="option_group_LiteSpeedCacheXF_description" version_id="1" version_string="1.0.0"><![CDATA[]]></phrase>
     <phrase title="option_litespeedcacheXF_lscache" version_id="1" version_string="1.0.0"><![CDATA[LiteSpeed Cache Check]]></phrase>
@@ -46,7 +74,11 @@
     <phrase title="option_litespeedcacheXF_publicttl" version_id="1" version_string="1.0.0"><![CDATA[Public TTL (seconds)]]></phrase>
     <phrase title="option_litespeedcacheXF_publicttl_explain" version_id="1" version_string="1.0.0"><![CDATA[Maximum time in seconds before a cached item is considered stale.]]></phrase>
   </phrases>
-  <route_prefixes/>
+  <route_prefixes>
+    <route_type type="admin">
+      <prefix original_prefix="lscache" class="Litespeedcache_Route_PrefixAdmin_Management" build_link="none"/>
+    </route_type>
+  </route_prefixes>
   <style_properties/>
   <templates/>
   <public_template_modifications/>

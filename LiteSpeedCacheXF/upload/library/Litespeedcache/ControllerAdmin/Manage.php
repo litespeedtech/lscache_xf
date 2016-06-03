@@ -23,9 +23,7 @@ class Litespeedcache_ControllerAdmin_Manage extends XenForo_ControllerAdmin_Abst
 	 */
     public function actionIndex()
     {
-		$viewParams = array();
-		return $this->responseView('XenForo_ViewAdmin_Litespeedcache',
-				'lscachemanageinfo', $viewParams);
+		return $this->responseReroute(__CLASS__, 'Actions');
     }
 
 	/**

@@ -18,8 +18,17 @@ class Litespeedcache_Listener_Global
 	const STATE_LOGGEDIN = 1 ;
 	const STATE_STAYLOGGEDIN = 2 ;
 
+	const CACHETAG_FORUMLIST = 'H';
+	const CACHETAG_FORUM = 'F.';
+	const CACHETAG_THREAD = 'T.';
+
+	const HEADER_PURGE = 'X-LiteSpeed-Purge';
+	const HEADER_CACHE_TAG = 'X-LiteSpeed-Tag';
+
 	private static $userState = 0 ;
 	private static $currentVary ;
+	private static $cacheTags = array();
+	private static $purgeTags = array();
 
 	/**
 	 * @xfcp: XenForo_Model_User
@@ -97,6 +106,11 @@ class Litespeedcache_Listener_Global
 			$maxage = XenForo_Application::getOptions()->litespeedcacheXF_publicttl ;
 			$cache_header = 'public,max-age=' . $maxage ;
 			$response->setHeader('X-LiteSpeed-Cache-Control', $cache_header) ;
+			if (!empty(self::$cacheTags)) {
+				$tags = array_unique(self::$cacheTags);
+				$response->setHeader(self::HEADER_CACHE_TAG,
+						implode(',', $tags));
+			}
 		}
 		else {
 			if ( (self::$userState & self::STATE_STAYLOGGEDIN) == self::STATE_STAYLOGGEDIN ) {
@@ -107,6 +121,13 @@ class Litespeedcache_Listener_Global
 			}
 			$response->setHeader('X-LiteSpeed-Cache-Control', 'no-cache') ;
 		}
+
+		if (!empty(self::$purgeTags)) {
+			self::$purgeTags[] = self::CACHETAG_FORUMLIST;
+			$tags = array_unique(self::$purgeTags);
+			$response->setHeader(self::HEADER_PURGE, implode(',', $tags));
+		}
+
 		/* This header is used to handle XenForo's cookie detection.
 		 * When a user attempts to log in, XenForo will check if his/her request
 		 * has a cookie. If not, XenForo will return that it requires cookie support.
@@ -117,4 +138,127 @@ class Litespeedcache_Listener_Global
 		$response->setHeader('LSC-Cookie', 'lsc_active=1') ;
 	}
 
+	public static function checkForCacheTags($hookName, &$contents,
+			array $hookParams, XenForo_Template_Abstract $template)
+	{
+		if ($hookName[0] != 'f' && $hookName[0] != 't') {
+			return;
+		}
+		if (strcmp($hookName, 'forum_view_threads_before') == 0) {
+			$forum = $hookParams['forum'];
+			self::$cacheTags[] = self::CACHETAG_FORUM . $forum['node_id'];
+		}
+		elseif (strcmp($hookName, 'thread_view_form_before') == 0) {
+			$thread = $hookParams['thread'];
+			self::$cacheTags[] = self::CACHETAG_THREAD . $thread['thread_id'];
+		}
+		elseif (strcmp($hookName, 'forum_list_nodes') == 0) {
+			self::$cacheTags[] = self::CACHETAG_FORUMLIST;
+		}
+	}
+
+	private static function checkModQueue(XenForo_Controller $controller)
+	{
+		$mod_queue = $controller->getInput()->filterSingle('queue',
+				XenForo_Input::ARRAY_SIMPLE);
+		if (empty($mod_queue)) {
+			return;
+		}
+
+		if (!empty($mod_queue['thread'])) {
+			$threads = $mod_queue['thread'];
+			foreach($threads as $threadId => $thread) {
+				if (strncmp($thread['action'], 'approve', 7) == 0) {
+					$forum = XenForo_Model::create('XenForo_Model_Forum')
+							->getForumByThreadId($threadId);
+					self::$purgeTags[] = self::CACHETAG_THREAD . $threadId;
+					self::$purgeTags[] = self::CACHETAG_FORUM
+							. $forum['node_id'];
+				}
+			}
+		}
+
+		if (empty($mod_queue['post'])) {
+			return;
+		}
+		$posts = $mod_queue['post'];
+		foreach($posts as $postId => $post) {
+			if (strncmp($post['action'], 'approve', 7) == 0) {
+				$postModel = XenForo_Model::create('XenForo_Model_Post')
+					->getPostById($postId);
+				$threadId = $postModel['thread_id'];
+				$forum = XenForo_Model::create('XenForo_Model_Forum')
+						->getForumByThreadId($threadId);
+				self::$purgeTags[] = self::CACHETAG_THREAD . $threadId;
+				self::$purgeTags[] = self::CACHETAG_FORUM
+						. $forum['node_id'];
+			}
+		}
+	}
+
+	public static function checkForPurgeTags(XenForo_Controller $controller,
+			$action, $controllerName)
+	{
+		$prefix = 'XenForo_Controller';
+		$prefixlen = strlen($prefix);
+		$forumId = NULL;
+		$threadId = NULL;
+		if ((strncmp($controllerName, $prefix, $prefixlen) != 0)
+				|| (($action[0] != 'A') && ($action[0] != 'S'))) {
+			return;
+		}
+
+		$noPrefix = substr($controllerName, $prefixlen);
+		switch ($noPrefix[0]) {
+			case 'A':
+				if ((strcmp($noPrefix, 'Admin_Forum') != 0)
+					|| ((strcmp($action, 'Save') != 0)
+						&& (strcmp($action, 'Delete') != 0))) {
+					return;
+				}
+				$forumId = $controller->getInput()->filterSingle('node_id',
+						XenForo_Input::UINT);
+				self::$purgeTags[] = self::CACHETAG_FORUMLIST;
+				if ($forumId != 0) {
+					self::$purgeTags[] = self::CACHETAG_FORUM . $forumId;
+				}
+				return;
+			case 'P':
+				break;
+			default:
+				return;
+		}
+
+		if ((strcmp($noPrefix, 'Public_ModerationQueue') == 0)
+				&& (strcmp($action, 'Save') == 0)) {
+			self::checkModQueue($controller);
+			return;
+		}
+		elseif ((strcmp($noPrefix, 'Public_Forum') == 0)
+				&& (strcmp($action, 'AddThread') == 0)) {
+			$forumId = $controller->getInput()->filterSingle('node_id',
+					XenForo_Input::UINT);
+		}
+		elseif ((strcmp($noPrefix, 'Public_Thread') == 0)
+				&& (strcmp($action, 'AddReply') == 0)) {
+			$threadId = $controller->getInput()->filterSingle('thread_id',
+					XenForo_Input::UINT);
+			$forum = XenForo_Model::create('XenForo_Model_Forum')
+					->getForumByThreadId($threadId);
+			$forumId = $forum['node_id'];
+		}
+		elseif ((strcmp($noPrefix, 'Admin_Forum') == 0)
+				&& ((strcmp($action, 'Save') == 0)
+					|| (strcmp($action, 'Delete') == 0))) {
+			$forumId = $controller->getInput()->filterSingle('node_id',
+					XenForo_Input::UINT);
+		}
+
+		if (!is_null($forumId)) {
+			self::$purgeTags[] = self::CACHETAG_FORUM . $forumId;
+		}
+		if (!is_null($threadId)) {
+			self::$purgeTags[] = self::CACHETAG_THREAD . $threadId;
+		}
+	}
 }

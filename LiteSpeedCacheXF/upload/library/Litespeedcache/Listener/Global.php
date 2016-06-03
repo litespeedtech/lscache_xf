@@ -103,14 +103,20 @@ class Litespeedcache_Listener_Global
 			if ( isset($_COOKIE[self::$currentVary]) ) {
 				self::setCacheVaryCookie(false) ;
 			}
-			$maxage = XenForo_Application::getOptions()->litespeedcacheXF_publicttl ;
-			$cache_header = 'public,max-age=' . $maxage ;
-			$response->setHeader('X-LiteSpeed-Cache-Control', $cache_header) ;
+			$options = XenForo_Application::getOptions();
 			if (!empty(self::$cacheTags)) {
 				$tags = array_unique(self::$cacheTags);
 				$response->setHeader(self::HEADER_CACHE_TAG,
 						implode(',', $tags));
 			}
+			if (in_array(self::CACHETAG_FORUMLIST, $tags)) {
+				$maxage = $options->litespeedcacheXF_homettl;
+			}
+			else {
+				$maxage = $options->litespeedcacheXF_publicttl;
+			}
+			$cache_header = 'public,max-age=' . $maxage;
+			$response->setHeader('X-LiteSpeed-Cache-Control', $cache_header);
 		}
 		else {
 			if ( (self::$userState & self::STATE_STAYLOGGEDIN) == self::STATE_STAYLOGGEDIN ) {

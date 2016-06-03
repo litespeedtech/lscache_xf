@@ -109,7 +109,7 @@ class Litespeedcache_Listener_Global
 				$response->setHeader(self::HEADER_CACHE_TAG,
 						implode(',', $tags));
 			}
-			if (in_array(self::CACHETAG_FORUMLIST, $tags)) {
+			if ((isset($tags)) && (in_array(self::CACHETAG_FORUMLIST, $tags))) {
 				$maxage = $options->litespeedcacheXF_homettl;
 			}
 			else {

@@ -21,6 +21,14 @@
       <p>{xen:phrase lscache_purge_all_desc}</p>
     </dd>
   </dl>
+  <dl class="ctrlUnit">
+    <dt>
+      <input type="submit" name="lscache_action_submit" value="{xen:phrase lscache_purge_home}" class="button" />
+    </dt>
+    <dd>
+      <p>{xen:phrase lscache_purge_home_desc}</p>
+    </dd>
+  </dl>
 </xen:form>]]></template>
     <template title="lscachemanageinfo"><![CDATA[<xen:title>{xen:phrase lscache_managetitle}</xen:title>
 
@@ -74,6 +82,8 @@
     <phrase title="lscache_managetitle" version_id="1" version_string="1.0.1"><![CDATA[LiteSpeed Cache Control Panel]]></phrase>
     <phrase title="lscache_purge_all" version_id="1" version_string="1.0.1"><![CDATA[Purge All]]></phrase>
     <phrase title="lscache_purge_all_desc" version_id="1" version_string="1.0.1"><![CDATA[Purge All will purge everything related to this XenForo forum from the cache.]]></phrase>
+    <phrase title="lscache_purge_home" version_id="1" version_string="1.0.1"><![CDATA[Purge Home]]></phrase>
+    <phrase title="lscache_purge_home_desc" version_id="1" version_string="1.0.1"><![CDATA[Purge Home will purge the home page/forum list from the cache.]]></phrase>
     <phrase title="lscache_purge_success" version_id="1" version_string="1.0.1"><![CDATA[Purged the cache successfully.]]></phrase>
     <phrase title="option_group_LiteSpeedCacheXF" version_id="1" version_string="1.0.0"><![CDATA[Litespeed Cache]]></phrase>
     <phrase title="option_group_LiteSpeedCacheXF_description" version_id="1" version_string="1.0.1"><![CDATA[These options control various aspects of the LiteSpeed Cache.]]></phrase>

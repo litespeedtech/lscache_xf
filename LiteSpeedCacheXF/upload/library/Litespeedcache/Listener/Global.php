@@ -51,6 +51,26 @@ class Litespeedcache_Listener_Global
 		self::$userState |= $value ;
 	}
 
+	public static function addPurgeTag($tag)
+	{
+		if (is_array($tag)) {
+			self::$purgeTags = array_merge(self::$purgeTags, $tag);
+		}
+		else {
+			self::$purgeTags[] = $tag;
+		}
+	}
+
+	public static function addCacheTag($tag)
+	{
+		if (is_array($tag)) {
+			self::$cacheTags = array_merge(self::$cacheTags, $tag);
+		}
+		else {
+			self::$cacheTags[] = $tag;
+		}
+	}
+
 	private static function setCacheVaryCookie( $value )
 	{
 		// has to call php function directly to avoid xf prefix
@@ -129,9 +149,14 @@ class Litespeedcache_Listener_Global
 		}
 
 		if (!empty(self::$purgeTags)) {
-			self::$purgeTags[] = self::CACHETAG_FORUMLIST;
-			$tags = array_unique(self::$purgeTags);
-			$response->setHeader(self::HEADER_PURGE, implode(',', $tags));
+			if (in_array('*', self::$purgeTags)) {
+				$tags = '*';
+			}
+			else {
+				self::$purgeTags[] = self::CACHETAG_FORUMLIST;
+				$tags = implode(',', array_unique(self::$purgeTags));
+			}
+			$response->setHeader(self::HEADER_PURGE, $tags);
 		}
 
 		/* This header is used to handle XenForo's cookie detection.

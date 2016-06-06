@@ -15,6 +15,11 @@ class Litespeedcache_Options
 
 //Validates admin settings
 
+	/**
+	 * Verify if the server and cache are enabled.
+	 *
+	 * @return mixed Nothing if enabled, error html if failed.
+	 */
 	public static function verifyLSCache()
 	{
 		$link = 'https://www.litespeedtech.com/solutions/other-web-application-acceleration/lscxf';
@@ -27,6 +32,14 @@ class Litespeedcache_Options
 		. 'LSCache for XenForo page</a>.</small><br /><br />';
 	}
 
+	/**
+	 * Verify that the Public TTL option is a valid setting.
+	 *
+	 * @param type $publicttl
+	 * @param XenForo_DataWriter $dw
+	 * @param type $fieldname
+	 * @return boolean true if verified, false otherwise.
+	 */
 	public static function verifyPublicTTL( $publicttl, XenForo_DataWriter $dw,
 			$fieldname )
 	{
@@ -39,6 +52,14 @@ class Litespeedcache_Options
 		return true;
 	}
 
+	/**
+	 * Verify that the Home TTL option is a valid setting.
+	 *
+	 * @param type $homettl
+	 * @param XenForo_DataWriter $dw
+	 * @param type $fieldname
+	 * @return boolean true if verified, false otherwise.
+	 */
 	public static function verifyHomeTTL( $homettl, XenForo_DataWriter $dw,
 			$fieldname )
 	{

@@ -37,20 +37,39 @@ class Litespeedcache_Listener_Global
 	public static function extendUserModel( $class, &$extend )
 	{
 		if ( Litespeedcache_Listener_Global::lscache_enabled() ) {
-			$extend[] = 'Litespeedcache_Extend_XenForo_Model_User' ;
+			$extend[] = 'Litespeedcache_Extend_XenForo_Model_User';
 		}
 	}
 
+	/**
+	 * Detect if the server has LiteSpeed Cache enabled.
+	 *
+	 * @return boolean true if server has cache, else false.
+	 */
 	public static function lscache_enabled()
 	{
-		return (isset($_SERVER['X-LSCACHE']) && $_SERVER['X-LSCACHE']) ;
+		return (isset($_SERVER['X-LSCACHE']) && $_SERVER['X-LSCACHE']);
 	}
 
+	/**
+	 * Set the user state to logged in and/or stay logged in.
+	 *
+	 * @param integer $value The bit to set user state to.
+	 */
 	public static function setUserState( $value )
 	{
-		self::$userState |= $value ;
+		self::$userState |= $value;
 	}
 
+	/**
+	 * Add a purge tag to the request. If multiple tags need to be added,
+	 * parameter should be an array.
+	 *
+	 * The purge tag(s) will notify the server to invalidate the cache entries
+	 * associated with the tag(s).
+	 *
+	 * @param mixed $tag A string or an array of purge tags to add.
+	 */
 	public static function addPurgeTag($tag)
 	{
 		if (is_array($tag)) {
@@ -61,6 +80,14 @@ class Litespeedcache_Listener_Global
 		}
 	}
 
+	/**
+	 * Add a cache tag to associate with the page. If multiple tags need to be
+	 * added, parameter should be an array.
+	 *
+	 * The cache tag is for the tagging system used by the server's cache.
+	 *
+	 * @param mixed $tag A string or an array of cache tags to add.
+	 */
 	public static function addCacheTag($tag)
 	{
 		if (is_array($tag)) {
@@ -71,44 +98,62 @@ class Litespeedcache_Listener_Global
 		}
 	}
 
+	/**
+	 * Sets the cache vary cookie. The cookie is used by the cache to
+	 * distinguish logged in users from non-logged in users.
+	 *
+	 * @param mixed $value True/false for logged in/not. Expiration time if
+	 * stay logged in.
+	 */
 	private static function setCacheVaryCookie( $value )
 	{
 		// has to call php function directly to avoid xf prefix
 
-		$secure = XenForo_Application::$secure ;
-		$httpOnly = true ;
+		$secure = XenForo_Application::$secure;
+		$httpOnly = true;
 
-		$cookieConfig = XenForo_Application::get('config')->cookie ;
-		$path = $cookieConfig->path ;
-		$domain = $cookieConfig->domain ;
-		$expiration = 0 ;
-		$cookieValue = 1 ;
+		$cookieConfig = XenForo_Application::get('config')->cookie;
+		$path = $cookieConfig->path;
+		$domain = $cookieConfig->domain;
+		$expiration = 0;
+		$cookieValue = 1;
 
 		if ( $value === false ) {
-			$expiration = XenForo_Application::$time - 86400 * 365 ;
-			$cookieValue = 0 ;
+			$expiration = XenForo_Application::$time - 86400 * 365;
+			$cookieValue = 0;
 		}
 		else if ( $value === true ) {
-			$expiration = 0 ; // default only for current session
+			$expiration = 0; // default only for current session
 		}
 		else {
 			// stay logged in, same as xf_usr
-			$expiration = XenForo_Application::$time + $value ;
+			$expiration = XenForo_Application::$time + $value;
 		}
-		setcookie(self::$currentVary, $cookieValue, $expiration, $path, $domain, $secure, $httpOnly) ;
+		setcookie(self::$currentVary, $cookieValue, $expiration, $path, $domain, $secure, $httpOnly);
 	}
 
-	public static function frontControllerPostView( XenForo_FrontController $fc, &$output )
+	/**
+	 * Front Controller Post View event listener.
+	 * Checks if the cache is enabled and the user is not logged in.
+	 * If both are the case, set up the cache/purge headers before the response
+	 * is sent out.
+	 *
+	 * @param XenForo_FrontController $fc
+	 * @param type $output
+	 */
+	public static function frontControllerPostView(
+			XenForo_FrontController $fc, &$output )
 	{
-		if ( ! Litespeedcache_Listener_Global::lscache_enabled() )
-			return ;
+		if ( !Litespeedcache_Listener_Global::lscache_enabled())
+			return;
 
-		$response = $fc->getResponse() ;
-		$cacheable = true ;
-		$uri = $fc->getRequest()->getRequestUri() ;
+		$response = $fc->getResponse();
+		$cacheable = true;
+		$uri = $fc->getRequest()->getRequestUri();
 
-
-		if ( XenForo_Visitor::getUserId() || (strpos($uri, '/admin.php') !== false) || XenForo_Helper_Cookie::getCookie('user') ) {
+		if ((XenForo_Visitor::getUserId())
+				|| (strpos($uri, '/admin.php') !== false)
+				|| (XenForo_Helper_Cookie::getCookie('user'))) {
 			$cacheable = false ;
 		}
 
@@ -121,7 +166,7 @@ class Litespeedcache_Listener_Global
 
 		if ( $cacheable ) {
 			if ( isset($_COOKIE[self::$currentVary]) ) {
-				self::setCacheVaryCookie(false) ;
+				self::setCacheVaryCookie(false);
 			}
 			$options = XenForo_Application::getOptions();
 			if (!empty(self::$cacheTags)) {
@@ -129,7 +174,8 @@ class Litespeedcache_Listener_Global
 				$response->setHeader(self::HEADER_CACHE_TAG,
 						implode(',', $tags));
 			}
-			if ((isset($tags)) && (in_array(self::CACHETAG_FORUMLIST, $tags))) {
+			if ((isset($tags))
+					&& (in_array(self::CACHETAG_FORUMLIST, $tags))) {
 				$maxage = $options->litespeedcacheXF_homettl;
 			}
 			else {
@@ -139,13 +185,15 @@ class Litespeedcache_Listener_Global
 			$response->setHeader('X-LiteSpeed-Cache-Control', $cache_header);
 		}
 		else {
-			if ( (self::$userState & self::STATE_STAYLOGGEDIN) == self::STATE_STAYLOGGEDIN ) {
-				self::setCacheVaryCookie(30 * 86400) ;
+			if ((self::$userState & self::STATE_STAYLOGGEDIN)
+					== self::STATE_STAYLOGGEDIN ) {
+				self::setCacheVaryCookie(30 * 86400);
 			}
-			elseif ( (self::$userState & self::STATE_LOGGEDIN) == self::STATE_LOGGEDIN ) {
-				self::setCacheVaryCookie(true) ;
+			elseif ((self::$userState & self::STATE_LOGGEDIN)
+					== self::STATE_LOGGEDIN ) {
+				self::setCacheVaryCookie(true);
 			}
-			$response->setHeader('X-LiteSpeed-Cache-Control', 'no-cache') ;
+			$response->setHeader('X-LiteSpeed-Cache-Control', 'no-cache');
 		}
 
 		if (!empty(self::$purgeTags)) {
@@ -166,9 +214,19 @@ class Litespeedcache_Listener_Global
 		 * 'Set-Cookie: lsc_active=1' header, so that when a client tries to log in,
 		 * there will be a cookie set, passing the cookie detection.
 		 */
-		$response->setHeader('LSC-Cookie', 'lsc_active=1') ;
+		$response->setHeader('LSC-Cookie', 'lsc_active=1');
 	}
 
+	/**
+	 * Template Hook event listener.
+	 * The template hook names are used to determine if the page loaded is
+	 * a taggable one.
+	 *
+	 * @param type $hookName
+	 * @param type $contents
+	 * @param array $hookParams
+	 * @param XenForo_Template_Abstract $template
+	 */
 	public static function checkForCacheTags($hookName, &$contents,
 			array $hookParams, XenForo_Template_Abstract $template)
 	{
@@ -188,6 +246,12 @@ class Litespeedcache_Listener_Global
 		}
 	}
 
+	/**
+	 * Check if the moderation queue made any changes that require a purge.
+	 * Specifically, if a thread or post was approved.
+	 *
+	 * @param XenForo_Controller $controller
+	 */
 	private static function checkModQueue(XenForo_Controller $controller)
 	{
 		$mod_queue = $controller->getInput()->filterSingle('queue',
@@ -227,6 +291,15 @@ class Litespeedcache_Listener_Global
 		}
 	}
 
+	/**
+	 * Controller Pre Dispatch event listener.
+	 * If any action involving changing a forum or thread takes place, purge
+	 * the thread/forum/forum list.
+	 *
+	 * @param XenForo_Controller $controller
+	 * @param type $action
+	 * @param type $controllerName
+	 */
 	public static function checkForPurgeTags(XenForo_Controller $controller,
 			$action, $controllerName)
 	{

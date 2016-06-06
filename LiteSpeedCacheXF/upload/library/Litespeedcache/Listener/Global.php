@@ -247,6 +247,77 @@ class Litespeedcache_Listener_Global
 	}
 
 	/**
+	 * Helper function for purging by post id.
+	 *
+	 * @param type $controller
+	 * @param integer $postId Optional. If not provided, will attempt to get it
+	 * from input.
+	 */
+	private static function purgeByPostId($controller, $postId = -1)
+	{
+		if ($postId == -1) {
+			$postId = $controller->getInput()->filterSingle('post_id',
+					XenForo_Input::UINT);
+		}
+		if ($postId == 0) {
+			return;
+		}
+		$postModel = XenForo_Model::create('XenForo_Model_Post')
+				->getPostById($postId);
+		$threadId = $postModel['thread_id'];
+		$forum = XenForo_Model::create('XenForo_Model_Forum')
+				->getForumByThreadId($threadId);
+		if ($threadId != 0) {
+			self::$purgeTags[] = self::CACHETAG_THREAD . $threadId;
+		}
+		if ($forum['node_id'] != 0) {
+			self::$purgeTags[] = self::CACHETAG_FORUM . $forum['node_id'];
+		}
+	}
+
+	/**
+	 * Helper function for purging by thread id.
+	 *
+	 * @param type $controller
+	 * @param integer $threadId Optional. If not provided, will attempt to get
+	 * it from input.
+	 */
+	private static function purgeByThreadId($controller, $threadId = -1)
+	{
+		if ($threadId == -1) {
+			$threadId = $controller->getInput()->filterSingle('thread_id',
+					XenForo_Input::UINT);
+		}
+		if ($threadId == 0) {
+			return;
+		}
+		$forum = XenForo_Model::create('XenForo_Model_Forum')
+				->getForumByThreadId($threadId);
+		self::$purgeTags[] = self::CACHETAG_THREAD . $threadId;
+		if ($forum['node_id'] != 0) {
+			self::$purgeTags[] = self::CACHETAG_FORUM . $forum['node_id'];
+		}
+	}
+
+	/**
+	 * Helper function for purging by forum id.
+	 *
+	 * @param type $controller
+	 * @param integer $forumId Optional. If not provided, will attempt to get it
+	 * from input.
+	 */
+	private static function purgeByForumId($controller, $forumId = -1)
+	{
+		if ($forumId == -1) {
+			$forumId = $controller->getInput()->filterSingle('node_id',
+					XenForo_Input::UINT);
+		}
+		if ($forumId != 0) {
+			self::$purgeTags[] = self::CACHETAG_FORUM . $forumId;
+		}
+	}
+
+	/**
 	 * Check if the moderation queue made any changes that require a purge.
 	 * Specifically, if a thread or post was approved.
 	 *
@@ -264,11 +335,7 @@ class Litespeedcache_Listener_Global
 			$threads = $mod_queue['thread'];
 			foreach($threads as $threadId => $thread) {
 				if (strncmp($thread['action'], 'approve', 7) == 0) {
-					$forum = XenForo_Model::create('XenForo_Model_Forum')
-							->getForumByThreadId($threadId);
-					self::$purgeTags[] = self::CACHETAG_THREAD . $threadId;
-					self::$purgeTags[] = self::CACHETAG_FORUM
-							. $forum['node_id'];
+					self::purgeByThreadId($controller, $threadId);
 				}
 			}
 		}
@@ -279,14 +346,7 @@ class Litespeedcache_Listener_Global
 		$posts = $mod_queue['post'];
 		foreach($posts as $postId => $post) {
 			if (strncmp($post['action'], 'approve', 7) == 0) {
-				$postModel = XenForo_Model::create('XenForo_Model_Post')
-					->getPostById($postId);
-				$threadId = $postModel['thread_id'];
-				$forum = XenForo_Model::create('XenForo_Model_Forum')
-						->getForumByThreadId($threadId);
-				self::$purgeTags[] = self::CACHETAG_THREAD . $threadId;
-				self::$purgeTags[] = self::CACHETAG_FORUM
-						. $forum['node_id'];
+				self::purgeByPostId($controller, $postId);
 			}
 		}
 	}
@@ -305,10 +365,15 @@ class Litespeedcache_Listener_Global
 	{
 		$prefix = 'XenForo_Controller';
 		$prefixlen = strlen($prefix);
+		$actionStart = array(
+			'A', // AddThread, AddReply
+			'D', // Delete
+			'S', // Save, SaveInline
+		);
 		$forumId = NULL;
 		$threadId = NULL;
 		if ((strncmp($controllerName, $prefix, $prefixlen) != 0)
-				|| (($action[0] != 'A') && ($action[0] != 'S'))) {
+				|| (!in_array($action[0], $actionStart))) {
 			return;
 		}
 
@@ -320,49 +385,36 @@ class Litespeedcache_Listener_Global
 						&& (strcmp($action, 'Delete') != 0))) {
 					return;
 				}
-				$forumId = $controller->getInput()->filterSingle('node_id',
-						XenForo_Input::UINT);
+				self::purgeByForumId($controller);
 				self::$purgeTags[] = self::CACHETAG_FORUMLIST;
-				if ($forumId != 0) {
-					self::$purgeTags[] = self::CACHETAG_FORUM . $forumId;
-				}
 				return;
 			case 'P':
+				if (strncmp($noPrefix, 'Public_', 7)) {
+					return;
+				}
+				$noPrefix = substr($noPrefix, 7);
 				break;
 			default:
 				return;
 		}
 
-		if ((strcmp($noPrefix, 'Public_ModerationQueue') == 0)
+		if ((strcmp($noPrefix, 'ModerationQueue') == 0)
 				&& (strcmp($action, 'Save') == 0)) {
 			self::checkModQueue($controller);
 			return;
 		}
-		elseif ((strcmp($noPrefix, 'Public_Forum') == 0)
+		elseif ((strcmp($noPrefix, 'Forum') == 0)
 				&& (strcmp($action, 'AddThread') == 0)) {
-			$forumId = $controller->getInput()->filterSingle('node_id',
-					XenForo_Input::UINT);
+			self::purgeByForumId($controller);
 		}
-		elseif ((strcmp($noPrefix, 'Public_Thread') == 0)
+		elseif ((strcmp($noPrefix, 'Post') == 0)
+				&& ((strcmp($action, 'SaveInline') != 0)
+						|| (strcmp($action, 'Delete') != 0))) {
+			self::purgeByPostId($controller);
+		}
+		elseif ((strcmp($noPrefix, 'Thread') == 0)
 				&& (strcmp($action, 'AddReply') == 0)) {
-			$threadId = $controller->getInput()->filterSingle('thread_id',
-					XenForo_Input::UINT);
-			$forum = XenForo_Model::create('XenForo_Model_Forum')
-					->getForumByThreadId($threadId);
-			$forumId = $forum['node_id'];
-		}
-		elseif ((strcmp($noPrefix, 'Admin_Forum') == 0)
-				&& ((strcmp($action, 'Save') == 0)
-					|| (strcmp($action, 'Delete') == 0))) {
-			$forumId = $controller->getInput()->filterSingle('node_id',
-					XenForo_Input::UINT);
-		}
-
-		if (!is_null($forumId)) {
-			self::$purgeTags[] = self::CACHETAG_FORUM . $forumId;
-		}
-		if (!is_null($threadId)) {
-			self::$purgeTags[] = self::CACHETAG_THREAD . $threadId;
+			self::purgeByThreadId($controller);
 		}
 	}
 }

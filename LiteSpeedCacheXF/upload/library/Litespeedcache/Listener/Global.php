@@ -185,12 +185,13 @@ class Litespeedcache_Listener_Global
 			$response->setHeader('X-LiteSpeed-Cache-Control', $cache_header);
 		}
 		else {
-			if ((self::$userState & self::STATE_STAYLOGGEDIN)
-					== self::STATE_STAYLOGGEDIN ) {
+			if (self::$userState & self::STATE_STAYLOGGEDIN) {
 				self::setCacheVaryCookie(30 * 86400);
 			}
 			elseif ((self::$userState & self::STATE_LOGGEDIN)
-					== self::STATE_LOGGEDIN ) {
+					|| ((XenForo_Visitor::getUserId())
+						&& (is_null($fc->getRequest()->getCookie(
+								self::$currentVary))))) {
 				self::setCacheVaryCookie(true);
 			}
 			$response->setHeader('X-LiteSpeed-Cache-Control', 'no-cache');
@@ -417,4 +418,45 @@ class Litespeedcache_Listener_Global
 			self::purgeByThreadId($controller);
 		}
 	}
+
+	/**
+	 * Controller Post Dispatch Event Listener.
+	 * This will listen for the login controller + action.
+	 * If login is successful, it will set the vary cookie so that the logged
+	 * in user will be able to see uncached pages.
+	 *
+	 * @param XenForo_Controller $controller
+	 * @param type $controllerResponse
+	 * @param type $controllerName
+	 * @param type $action
+	 */
+	public static function checkIfLogin(XenForo_Controller $controller,
+			$controllerResponse, $controllerName, $action)
+	{
+		$matchController = 'XenForo_ControllerPublic_Login';
+		$matchAction = 'Login';
+
+		if ((strcmp($matchController, $controllerName) != 0)
+				|| (strcmp($matchAction, $action) != 0)) {
+			return;
+		}
+
+		$respClass = get_class($controllerResponse);
+		$respPost = 'XenForo_ControllerResponse_View';
+		$postTemplate = 'login_post_redirect';
+		$respRedirect = 'XenForo_ControllerResponse_Redirect';
+
+		if (((strcmp($respClass, $respPost) == 0)
+				&& (strcmp($controllerResponse['templateName'],
+						$postTemplate) == 0))
+			|| (strcmp($respClass, $respRedirect) == 0)) {
+			self::setUserState(self::STATE_LOGGEDIN);
+			if ($controller->getInput()->filterSingle('remember',
+					XenForo_Input::UINT)) {
+				self::setUserState(self::STATE_STAYLOGGEDIN);
+			}
+		}
+	}
 }
+
+

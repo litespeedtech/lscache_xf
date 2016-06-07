@@ -38,10 +38,11 @@
   <admin_template_modifications/>
   <code_events/>
   <code_event_listeners>
-    <listener event_id="controller_pre_dispatch" execute_order="10" callback_class="Litespeedcache_Listener_Global" callback_method="checkForPurgeTags" active="1" hint="" description=""/>
+    <listener event_id="controller_post_dispatch" execute_order="10" callback_class="Litespeedcache_Listener_Global" callback_method="checkIfLogin" active="1" hint="" description="Check if login"/>
+    <listener event_id="controller_pre_dispatch" execute_order="10" callback_class="Litespeedcache_Listener_Global" callback_method="checkForPurgeTags" active="1" hint="" description="Check for purge tags"/>
     <listener event_id="front_controller_post_view" execute_order="10" callback_class="Litespeedcache_Listener_Global" callback_method="frontControllerPostView" active="1" hint="" description=""/>
     <listener event_id="load_class_model" execute_order="10" callback_class="Litespeedcache_Listener_Global" callback_method="extendUserModel" active="1" hint="XenForo_Model_User" description="XenForo_Model_User"/>
-    <listener event_id="template_hook" execute_order="10" callback_class="Litespeedcache_Listener_Global" callback_method="checkForCacheTags" active="1" hint="" description=""/>
+    <listener event_id="template_hook" execute_order="10" callback_class="Litespeedcache_Listener_Global" callback_method="checkForCacheTags" active="1" hint="" description="Check for cache tags"/>
   </code_event_listeners>
   <cron/>
   <email_templates/>

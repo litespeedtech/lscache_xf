@@ -249,16 +249,20 @@ class Litespeedcache_Listener_Global
 		if ($hookName[0] != 'f' && $hookName[0] != 't') {
 			return;
 		}
-		if (strcmp($hookName, 'forum_view_threads_before') == 0) {
-			$forum = $hookParams['forum'];
-			self::$cacheTags[] = self::CACHETAG_FORUM . $forum['node_id'];
-		}
-		elseif (strcmp($hookName, 'thread_view_form_before') == 0) {
-			$thread = $hookParams['thread'];
-			self::$cacheTags[] = self::CACHETAG_THREAD . $thread['thread_id'];
-		}
-		elseif (strcmp($hookName, 'forum_list_nodes') == 0) {
-			self::$cacheTags[] = self::CACHETAG_FORUMLIST;
+		switch ($hookName) {
+			case 'forum_view_threads_before':
+				$forum = $hookParams['forum'];
+				self::$cacheTags[] = self::CACHETAG_FORUM . $forum['node_id'];
+				break;
+			case 'thread_view_form_before':
+				$thread = $hookParams['thread'];
+				self::$cacheTags[] = self::CACHETAG_THREAD . $thread['thread_id'];
+				break;
+			case 'forum_list_nodes':
+				self::$cacheTags[] = self::CACHETAG_FORUMLIST;
+				break;
+			default:
+				break;
 		}
 	}
 
@@ -396,9 +400,8 @@ class Litespeedcache_Listener_Global
 		$noPrefix = substr($controllerName, $prefixlen);
 		switch ($noPrefix[0]) {
 			case 'A':
-				if ((strcmp($noPrefix, 'Admin_Forum') != 0)
-					|| ((strcmp($action, 'Save') != 0)
-						&& (strcmp($action, 'Delete') != 0))) {
+				if (($noPrefix != 'Admin_Forum')
+					|| (($action != 'Save') && ($action != 'Delete'))) {
 					return;
 				}
 				self::purgeByForumId($controller);
@@ -414,22 +417,18 @@ class Litespeedcache_Listener_Global
 				return;
 		}
 
-		if ((strcmp($noPrefix, 'ModerationQueue') == 0)
-				&& (strcmp($action, 'Save') == 0)) {
+		if (($noPrefix == 'ModerationQueue') && ($action == 'Save')) {
 			self::checkModQueue($controller);
 			return;
 		}
-		elseif ((strcmp($noPrefix, 'Forum') == 0)
-				&& (strcmp($action, 'AddThread') == 0)) {
+		elseif (($noPrefix == 'Forum') && ($action == 'AddThread')) {
 			self::purgeByForumId($controller);
 		}
-		elseif ((strcmp($noPrefix, 'Post') == 0)
-				&& ((strcmp($action, 'SaveInline') != 0)
-						|| (strcmp($action, 'Delete') != 0))) {
+		elseif (($noPrefix == 'Post')
+				&& (($action == 'SaveInline') || ($action == 'Delete'))) {
 			self::purgeByPostId($controller);
 		}
-		elseif ((strcmp($noPrefix, 'Thread') == 0)
-				&& (strcmp($action, 'AddReply') == 0)) {
+		elseif (($noPrefix == 'Thread') && ($action == 'AddReply')) {
 			self::purgeByThreadId($controller);
 		}
 	}
@@ -450,21 +449,16 @@ class Litespeedcache_Listener_Global
 	{
 		$matchController = 'XenForo_ControllerPublic_Login';
 		$matchAction = 'Login';
+		$postTemplate = 'login_post_redirect';
 
-		if ((strcmp($matchController, $controllerName) != 0)
-				|| (strcmp($matchAction, $action) != 0)) {
+		if (($matchController != $controllerName)
+				|| ($matchAction != $action)) {
 			return;
 		}
 
-		$respClass = get_class($controllerResponse);
-		$respPost = 'XenForo_ControllerResponse_View';
-		$postTemplate = 'login_post_redirect';
-		$respRedirect = 'XenForo_ControllerResponse_Redirect';
-
-		if (((strcmp($respClass, $respPost) == 0)
-				&& (strcmp($controllerResponse['templateName'],
-						$postTemplate) == 0))
-			|| (strcmp($respClass, $respRedirect) == 0)) {
+		if ((($controllerResponse instanceof XenForo_ControllerResponse_View)
+				&& ($controllerResponse['templateName'] == $postTemplate))
+			|| ($controllerResponse instanceof XenForo_ControllerResponse_Redirect)) {
 			self::setUserState(self::STATE_LOGGEDIN);
 			if ($controller->getInput()->filterSingle('remember',
 					XenForo_Input::UINT)) {

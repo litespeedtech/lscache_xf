@@ -72,4 +72,15 @@ class Litespeedcache_Options
 		return true;
 	}
 
+	public static function verifySeparateMobile( $separateMobile,
+			XenForo_DataWriter $dw, $fieldname )
+	{
+		if (($separateMobile != 0) && ($separateMobile != 1)) {
+			$dw->error(new XenForo_Phrase('Separate Mobile setting is an'
+					. ' impossible value.'), $fieldname);
+			return false;
+		}
+		return true;
+	}
+
 }

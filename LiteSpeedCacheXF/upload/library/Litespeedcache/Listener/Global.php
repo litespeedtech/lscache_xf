@@ -148,8 +148,11 @@ class Litespeedcache_Listener_Global
 			return;
 
 		$response = $fc->getResponse();
+		$request = $fc->getRequest();
 		$cacheable = true;
-		$uri = $fc->getRequest()->getRequestUri();
+		$uri = $request->getRequestUri();
+		$options = XenForo_Application::getOptions();
+		$is_mobile = XenForo_Visitor::isBrowsingWith('mobile');
 
 		if ((XenForo_Visitor::getUserId())
 				|| (strpos($uri, '/admin.php') !== false)
@@ -157,18 +160,30 @@ class Litespeedcache_Listener_Global
 			$cacheable = false ;
 		}
 
-		if ( isset($_SERVER[self::COOKIE_LSCACHE_VARY_NAME])) {
-			self::$currentVary = $_SERVER[self::COOKIE_LSCACHE_VARY_NAME];
+		if ( $request->getServer(self::COOKIE_LSCACHE_VARY_NAME)) {
+			self::$currentVary = $request->getServer(
+					self::COOKIE_LSCACHE_VARY_NAME);
 		}
 		else {
 			self::$currentVary = self::COOKIE_LSCACHE_VARY_DEFAULT;
+		}
+
+		if (($cacheable)
+				&& ($options->litespeedcacheXF_separatemobile)) {
+			if ($request->getServer('LSCACHE_VARY_VALUE') === 'ismobile') {
+				if (!$is_mobile) {
+					$cacheable = false;
+				}
+			}
+			elseif ($is_mobile) {
+				$cacheable = false;
+			}
 		}
 
 		if ( $cacheable ) {
 			if ( isset($_COOKIE[self::$currentVary]) ) {
 				self::setCacheVaryCookie(false);
 			}
-			$options = XenForo_Application::getOptions();
 			if (!empty(self::$cacheTags)) {
 				$tags = array_unique(self::$cacheTags);
 				$response->setHeader(self::HEADER_CACHE_TAG,
@@ -190,7 +205,7 @@ class Litespeedcache_Listener_Global
 			}
 			elseif ((self::$userState & self::STATE_LOGGEDIN)
 					|| ((XenForo_Visitor::getUserId())
-						&& (is_null($fc->getRequest()->getCookie(
+						&& (is_null($request->getCookie(
 								self::$currentVary))))) {
 				self::setCacheVaryCookie(true);
 			}

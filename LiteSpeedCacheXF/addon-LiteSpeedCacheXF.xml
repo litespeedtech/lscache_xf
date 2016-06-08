@@ -40,10 +40,10 @@
 <p>{xen:phrase lscache_rewritedesc}
 </p>
 <br><br>
-<code>
+<p style="word-wrap:break-word" class="textCtrl code">
 RewriteCond %{HTTP_USER_AGENT} NokiaN[^\/]*|\ Mobile(\ Safari)?\/|SymbianOS|Silk-Accelerated|Opera(\ |\/)(Mini|8|9\.[0-7])|IEMobile\/|^BlackBerry [NC] 
 RewriteRule .* - [E=Cache-Control:vary=ismobile]
-</code>
+</p>
 </xen:form>]]></template>
     <template title="lscachesettings"><![CDATA[<xen:title>{xen:phrase lscache_settingstitle}</xen:title>
 
@@ -54,7 +54,8 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
 		<dt>
 		</dt>
 		<dd>
-			<a href={xen:adminlink lscacherewrite} class="OverlayTrigger">{xen:phrase lscache_rewritetrigger}</a>
+			<span class="statusEditorCounter warning">{xen:phrase lscache_rewritetrigger}</span>&nbsp;&nbsp;
+			<a href={xen:adminlink lscacherewrite} class="button OverlayTrigger">See Rewrite Rules</a>
 		</dd>
 	</dl>
 	{xen:raw $litespeedcacheXF_separatemobile}
@@ -94,7 +95,7 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
       <relation group_id="LiteSpeedCacheXF" display_order="10"/>
     </option>
     <option option_id="litespeedcacheXF_separatemobile" edit_format="onoff" data_type="boolean" can_backup="1" validation_class="Litespeedcache_Options" validation_method="verifySeparateMobile">
-      <default_value>false</default_value>
+      <default_value>0</default_value>
       <edit_format_params></edit_format_params>
       <sub_options></sub_options>
       <relation group_id="LiteSpeedCacheXF" display_order="20"/>
@@ -128,7 +129,7 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
     <phrase title="option_litespeedcacheXF_homettl_explain" version_id="1" version_string="1.0.1"><![CDATA[Maximum time in seconds before the home page/forum list is considered stale.]]></phrase>
     <phrase title="option_litespeedcacheXF_publicttl" version_id="1" version_string="1.0.0"><![CDATA[Public TTL (seconds)]]></phrase>
     <phrase title="option_litespeedcacheXF_publicttl_explain" version_id="1" version_string="1.0.0"><![CDATA[Maximum time in seconds before a cached item is considered stale.]]></phrase>
-    <phrase title="option_litespeedcacheXF_separatemobile" version_id="1" version_string="1.0.1"><![CDATA[Separate Mobile Cache Entry]]></phrase>
+    <phrase title="option_litespeedcacheXF_separatemobile" version_id="1" version_string="1.0.1"><![CDATA[Separate Cache Entry for Mobile]]></phrase>
     <phrase title="option_litespeedcacheXF_separatemobile_explain" version_id="1" version_string="1.0.1"><![CDATA[Some plugins differentiate views based on whether the visitor is mobile or not. If the desktop view and mobile view are different, this is used to cache the views separately.]]></phrase>
   </phrases>
   <route_prefixes>

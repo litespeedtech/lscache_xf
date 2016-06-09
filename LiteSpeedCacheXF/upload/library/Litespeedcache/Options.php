@@ -72,6 +72,15 @@ class Litespeedcache_Options
 		return true;
 	}
 
+	/**
+	 * Verify that the Separate Cache Entry for Mobile option is
+	 * a valid setting.
+	 *
+	 * @param type $separateMobile
+	 * @param XenForo_DataWriter $dw
+	 * @param type $fieldname
+	 * @return boolean
+	 */
 	public static function verifySeparateMobile( $separateMobile,
 			XenForo_DataWriter $dw, $fieldname )
 	{

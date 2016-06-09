@@ -372,26 +372,44 @@ class Litespeedcache_Listener_Global
 	}
 
 	/**
-	 * Controller Pre Dispatch event listener.
+	 * Test the controllerResponse class to verify that login was successful.
+	 *
+	 * @param type $resp
+	 * @return boolean True if login was successful, false otherwise.
+	 */
+	private static function isLoginSuccess($resp)
+	{
+		$postTemplate = 'login_post_redirect';
+		return ((($resp instanceof XenForo_ControllerResponse_View)
+					&& ($resp->templateName == $postTemplate))
+				|| ($resp instanceof XenForo_ControllerResponse_Redirect));
+	}
+
+	/**
+	 * Controller Post Dispatch Event Listener.
+	 * This will listen for the login controller + action and
+	 * any purge controller + action.
+	 * If login is successful, it will set the vary cookie so that the logged
+	 * in user will be able to see uncached pages.
 	 * If any action involving changing a forum or thread takes place, purge
 	 * the thread/forum/forum list.
 	 *
 	 * @param XenForo_Controller $controller
-	 * @param type $action
+	 * @param type $controllerResponse
 	 * @param type $controllerName
+	 * @param type $action
 	 */
-	public static function checkForPurgeTags(XenForo_Controller $controller,
-			$action, $controllerName)
+	public static function checkPostDispatch(XenForo_Controller $controller,
+			$controllerResponse, $controllerName, $action)
 	{
 		$prefix = 'XenForo_Controller';
 		$prefixlen = strlen($prefix);
 		$actionStart = array(
 			'A', // AddThread, AddReply
 			'D', // Delete
+			'L', // Login
 			'S', // Save, SaveInline
 		);
-		$forumId = NULL;
-		$threadId = NULL;
 		if ((strncmp($controllerName, $prefix, $prefixlen) != 0)
 				|| (!in_array($action[0], $actionStart))) {
 			return;
@@ -417,53 +435,52 @@ class Litespeedcache_Listener_Global
 				return;
 		}
 
-		if (($noPrefix == 'ModerationQueue') && ($action == 'Save')) {
-			self::checkModQueue($controller);
-			return;
-		}
-		elseif (($noPrefix == 'Forum') && ($action == 'AddThread')) {
-			self::purgeByForumId($controller);
-		}
-		elseif (($noPrefix == 'Post')
-				&& (($action == 'SaveInline') || ($action == 'Delete'))) {
-			self::purgeByPostId($controller);
-		}
-		elseif (($noPrefix == 'Thread') && ($action == 'AddReply')) {
-			self::purgeByThreadId($controller);
-		}
-	}
-
-	/**
-	 * Controller Post Dispatch Event Listener.
-	 * This will listen for the login controller + action.
-	 * If login is successful, it will set the vary cookie so that the logged
-	 * in user will be able to see uncached pages.
-	 *
-	 * @param XenForo_Controller $controller
-	 * @param type $controllerResponse
-	 * @param type $controllerName
-	 * @param type $action
-	 */
-	public static function checkIfLogin(XenForo_Controller $controller,
-			$controllerResponse, $controllerName, $action)
-	{
-		$matchController = 'XenForo_ControllerPublic_Login';
-		$matchAction = 'Login';
-		$postTemplate = 'login_post_redirect';
-
-		if (($matchController != $controllerName)
-				|| ($matchAction != $action)) {
-			return;
-		}
-
-		if ((($controllerResponse instanceof XenForo_ControllerResponse_View)
-				&& ($controllerResponse->templateName == $postTemplate))
-			|| ($controllerResponse instanceof XenForo_ControllerResponse_Redirect)) {
-			self::setUserState(self::STATE_LOGGEDIN);
-			if ($controller->getInput()->filterSingle('remember',
-					XenForo_Input::UINT)) {
-				self::setUserState(self::STATE_STAYLOGGEDIN);
-			}
+		switch ($noPrefix) {
+			case 'Login':
+				if (($action != 'Login')
+						|| (!self::isLoginSuccess($controllerResponse))) {
+					break;
+				}
+				self::setUserState(self::STATE_LOGGEDIN);
+				if ($controller->getInput()->filterSingle('remember',
+						XenForo_Input::UINT)) {
+					self::setUserState(self::STATE_STAYLOGGEDIN);
+				}
+				break;
+			case 'Thread':
+				if ($action != 'AddReply') {
+					break;
+				}
+				// If it is a thread add reply, need to check the replies.
+				// If any are not moderated, purge the cache.
+				foreach ($controllerResponse->params['posts'] as $post) {
+					if (!$post['isModerated']) {
+						self::purgeByThreadId($controller);
+						break;
+					}
+				}
+				break;
+			case 'Forum':
+				if ($action == 'AddThread') {
+					// TODO: Check if added thread is moderated?
+					// Currently no easy fix.
+					self::purgeByForumId($controller);
+				}
+				break;
+			case 'Post':
+				// If edit post or delete post, purge cache.
+				if (($action == 'SaveInline') || ($action == 'Delete')) {
+					self::purgeByPostId($controller);
+				}
+				break;
+			case 'ModerationQueue':
+				// If saving something in moderation queue, check it.
+				if ($action == 'Save') {
+					self::checkModQueue($controller);
+				}
+				break;
+			default:
+				break;
 		}
 	}
 }

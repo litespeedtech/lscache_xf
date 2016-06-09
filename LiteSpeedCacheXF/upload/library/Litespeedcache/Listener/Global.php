@@ -457,7 +457,7 @@ class Litespeedcache_Listener_Global
 		}
 
 		if ((($controllerResponse instanceof XenForo_ControllerResponse_View)
-				&& ($controllerResponse['templateName'] == $postTemplate))
+				&& ($controllerResponse->templateName == $postTemplate))
 			|| ($controllerResponse instanceof XenForo_ControllerResponse_Redirect)) {
 			self::setUserState(self::STATE_LOGGEDIN);
 			if ($controller->getInput()->filterSingle('remember',

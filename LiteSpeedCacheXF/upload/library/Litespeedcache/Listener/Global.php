@@ -405,7 +405,7 @@ class Litespeedcache_Listener_Global
 		$prefix = 'XenForo_Controller';
 		$prefixlen = strlen($prefix);
 		$actionStart = array(
-			'A', // AddThread, AddReply
+			'A', // AddThread, AddReply, Approve
 			'D', // Delete
 			'L', // Login
 			'S', // Save, SaveInline
@@ -448,7 +448,8 @@ class Litespeedcache_Listener_Global
 				}
 				break;
 			case 'Thread':
-				if ($action != 'AddReply') {
+				if (($action != 'AddReply')
+					|| (!($controllerResponse instanceof XenForo_ControllerResponse_View))) {
 					break;
 				}
 				// If it is a thread add reply, need to check the replies.
@@ -477,6 +478,24 @@ class Litespeedcache_Listener_Global
 				// If saving something in moderation queue, check it.
 				if ($action == 'Save') {
 					self::checkModQueue($controller);
+				}
+				break;
+			case 'InlineMod_Post':
+				if ($action == 'Approve') {
+					$posts = $controller->getInput()->filterSingle('posts',
+						XenForo_Input::ARRAY_SIMPLE);
+					foreach ($posts as $postId) {
+						self::purgeByPostId($controller, $postId);
+					}
+				}
+				break;
+			case 'InlineMod_Thread':
+				if ($action == 'Approve') {
+					$threads = $controller->getInput()->filterSingle('threads',
+						XenForo_Input::ARRAY_SIMPLE);
+					foreach ($threads as $threadId) {
+						self::purgeByThreadId($controller, $threadId);
+					}
 				}
 				break;
 			default:

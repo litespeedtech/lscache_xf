@@ -29,6 +29,7 @@ class Litespeedcache_Listener_Global
 	private static $currentVary ;
 	private static $cacheTags = array();
 	private static $purgeTags = array();
+	private static $isCacheable = true;
 
 	/**
 	 * @xfcp: XenForo_Model_User
@@ -59,6 +60,13 @@ class Litespeedcache_Listener_Global
 	public static function setUserState( $value )
 	{
 		self::$userState |= $value;
+	}
+
+	public static function setNotCacheable($reason) {
+		if (XenForo_Application::debugMode()) {
+			error_log('LSCache Do Not Cache because ' . $reason);
+		}
+		self::$isCacheable = false;
 	}
 
 	/**
@@ -156,8 +164,9 @@ class Litespeedcache_Listener_Global
 
 		if ((XenForo_Visitor::getUserId())
 				|| (strpos($uri, '/admin.php') !== false)
-				|| (XenForo_Helper_Cookie::getCookie('user'))) {
-			$cacheable = false ;
+				|| (XenForo_Helper_Cookie::getCookie('user'))
+				|| (self::$isCacheable == false)) {
+			$cacheable = false;
 		}
 
 		if ( $request->getServer(self::COOKIE_LSCACHE_VARY_NAME)) {
@@ -496,6 +505,11 @@ class Litespeedcache_Listener_Global
 					foreach ($threads as $threadId) {
 						self::purgeByThreadId($controller, $threadId);
 					}
+				}
+				break;
+			case 'Misc':
+				if (($action == 'Style') || ($action == 'Language')){
+					self::setNotCacheable('logged out user changing style or language.');
 				}
 				break;
 			default:

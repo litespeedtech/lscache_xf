@@ -72,6 +72,18 @@ class Litespeedcache_Options
 		return true;
 	}
 
+	public static function verifyLoginCookie($loginCookie,
+		XenForo_DataWriter $dw, $fieldname)
+	{
+		$invalidChars = "=,; \t\r\n\013\014";
+		if (strcspn($loginCookie, $invalidChars) != strlen($loginCookie)) {
+			$dw->error(new XenForo_Phrase('The login cookie contained '
+					. 'invalid characters.'), $fieldname);
+			return false;
+		}
+		return true;
+	}
+
 	/**
 	 * Verify that the Separate Cache Entry for Mobile option is
 	 * a valid setting.

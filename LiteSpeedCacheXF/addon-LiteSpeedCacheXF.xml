@@ -43,7 +43,7 @@
 </p>
 <br><br>
 <p style="word-wrap:break-word" class="textCtrl code">
-RewriteCond %{HTTP_USER_AGENT} NokiaN[^\/]*|\ Mobile(\ Safari)?\/|SymbianOS|Silk-Accelerated|Opera(\ |\/)(Mini|8|9\.[0-7])|IEMobile\/|^BlackBerry [NC] 
+RewriteCond %{HTTP_USER_AGENT} NokiaN[^\/]*|\ Mobile(\ Safari)?\/|SymbianOS|Silk-Accelerated|Opera(\ |\/)(Mini|8|9\.[0-7])|IEMobile\/|^BlackBerry [NC]
 RewriteRule .* - [E=Cache-Control:vary=ismobile]
 </p>
 </xen:form>]]></template>
@@ -52,6 +52,7 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
 <xen:form action="{xen:adminlink 'options/save'}" class="AutoValidator OptIn">
 	{xen:raw $litespeedcacheXF_homettl}
 	{xen:raw $litespeedcacheXF_publicttl}
+	{xen:raw $litespeedcacheXF_logincookie}
 	<dl class="ctrlUnit">
 		<dt>
 		</dt>
@@ -84,6 +85,12 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
       <sub_options></sub_options>
       <relation group_id="LiteSpeedCacheXF" display_order="1"/>
     </option>
+    <option option_id="litespeedcacheXF_logincookie" edit_format="textbox" data_type="string" can_backup="1" validation_class="Litespeedcache_Options" validation_method="verifyLoginCookie">
+      <default_value>_lscache_vary</default_value>
+      <edit_format_params></edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="LiteSpeedCacheXF" display_order="20"/>
+    </option>
     <option option_id="litespeedcacheXF_lscache" edit_format="callback" data_type="boolean" can_backup="1">
       <default_value></default_value>
       <edit_format_params>Litespeedcache_Options::verifyLSCache</edit_format_params>
@@ -100,7 +107,7 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
       <default_value>0</default_value>
       <edit_format_params></edit_format_params>
       <sub_options></sub_options>
-      <relation group_id="LiteSpeedCacheXF" display_order="20"/>
+      <relation group_id="LiteSpeedCacheXF" display_order="30"/>
     </option>
   </optiongroups>
   <permissions>
@@ -130,6 +137,8 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
     <phrase title="option_group_LiteSpeedCacheXF_description" version_id="1" version_string="1.0.2"><![CDATA[These options control various aspects of the LiteSpeed Cache.]]></phrase>
     <phrase title="option_litespeedcacheXF_homettl" version_id="1" version_string="1.0.2"><![CDATA[Home Page TTL (seconds)]]></phrase>
     <phrase title="option_litespeedcacheXF_homettl_explain" version_id="1" version_string="1.0.2"><![CDATA[Maximum time in seconds before the home page/forum list is considered stale.]]></phrase>
+    <phrase title="option_litespeedcacheXF_logincookie" version_id="1" version_string="1.0.2.1"><![CDATA[Login Cookie]]></phrase>
+    <phrase title="option_litespeedcacheXF_logincookie_explain" version_id="1" version_string="1.0.2.1"><![CDATA[Default value is _lscache_vary. Customize the Login Cookie name used by the plugin to determine if the visitor is logged in.]]></phrase>
     <phrase title="option_litespeedcacheXF_publicttl" version_id="1" version_string="1.0.0"><![CDATA[Public TTL (seconds)]]></phrase>
     <phrase title="option_litespeedcacheXF_publicttl_explain" version_id="1" version_string="1.0.0"><![CDATA[Maximum time in seconds before a cached item is considered stale.]]></phrase>
     <phrase title="option_litespeedcacheXF_separatemobile" version_id="1" version_string="1.0.2"><![CDATA[Separate Cache Entry for Mobile]]></phrase>

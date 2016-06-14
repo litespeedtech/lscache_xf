@@ -169,9 +169,18 @@ class Litespeedcache_Listener_Global
 			$cacheable = false;
 		}
 
-		if ( $request->getServer(self::COOKIE_LSCACHE_VARY_NAME)) {
-			self::$currentVary = $request->getServer(
-					self::COOKIE_LSCACHE_VARY_NAME);
+		if (($request->getServer(self::COOKIE_LSCACHE_VARY_NAME))
+			&& ($options->litespeedcacheXF_logincookie != self::COOKIE_LSCACHE_VARY_DEFAULT)) {
+			$serverVary = $request->getServer(self::COOKIE_LSCACHE_VARY_NAME);
+			if (in_array($options->litespeedcacheXF_logincookie,
+				explode(',', $serverVary))) {
+				self::$currentVary = $serverVary;
+			}
+			else {
+				$cacheable = false;
+				error_log('XenForo login cookie setting does not match'
+					. ' server rewrite rule. Do not cache.');
+			}
 		}
 		else {
 			self::$currentVary = self::COOKIE_LSCACHE_VARY_DEFAULT;
@@ -513,6 +522,8 @@ class Litespeedcache_Listener_Global
 				}
 				break;
 			default:
+//				error_log('controllerName ' . $controllerName . ', action '
+//					. $action . ', controllerResponse ' . get_class($controllerResponse));
 				break;
 		}
 	}

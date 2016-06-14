@@ -517,13 +517,16 @@ class Litespeedcache_Listener_Global
 				}
 				break;
 			case 'Misc':
-				if (($action == 'Style') || ($action == 'Language')){
+				if (($action == 'Style') || ($action == 'Language')) {
 					self::setNotCacheable('logged out user changing style or language.');
 				}
 				break;
+			case 'Register':
+				if (($action == 'Facebook') || ($action == 'Google') || ($action == 'Twitter')) {
+					self::setNotCacheable('External login (e.g. Facebook).');
+				}
+				break;
 			default:
-//				error_log('controllerName ' . $controllerName . ', action '
-//					. $action . ', controllerResponse ' . get_class($controllerResponse));
 				break;
 		}
 	}

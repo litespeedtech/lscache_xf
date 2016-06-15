@@ -25,11 +25,14 @@ class Litespeedcache_Listener_Global
 	const HEADER_PURGE = 'X-LiteSpeed-Purge';
 	const HEADER_CACHE_TAG = 'X-LiteSpeed-Tag';
 
+	const FLAG_NOTCACHEABLE = 1;
+	const FLAG_LOGINCOOKIECHANGED = 2;
+
 	private static $userState = 0 ;
 	private static $currentVary ;
 	private static $cacheTags = array();
 	private static $purgeTags = array();
-	private static $isCacheable = true;
+	private static $flags = 0;
 
 	/**
 	 * @xfcp: XenForo_Model_User
@@ -62,11 +65,26 @@ class Litespeedcache_Listener_Global
 		self::$userState |= $value;
 	}
 
-	public static function setNotCacheable($reason) {
+	/**
+	 * Sets the not cacheable flag. The provided reason is used to output for
+	 * debugging purposes.
+	 *
+	 * @param string $reason The reason for why the page is not cacheable.
+	 */
+	public static function setNotCacheable($reason)
+	{
 		if (XenForo_Application::debugMode()) {
 			error_log('LSCache Do Not Cache because ' . $reason);
 		}
-		self::$isCacheable = false;
+		self::$flags |= self::FLAG_NOTCACHEABLE;
+	}
+
+	/**
+	 * Sets the login cookie changed flag.
+	 */
+	public static function changedLoginCookie()
+	{
+		self::$flags |= self::FLAG_LOGINCOOKIECHANGED;
 	}
 
 	/**
@@ -165,7 +183,7 @@ class Litespeedcache_Listener_Global
 		if ((XenForo_Visitor::getUserId())
 				|| (strpos($uri, '/admin.php') !== false)
 				|| (XenForo_Helper_Cookie::getCookie('user'))
-				|| (self::$isCacheable == false)) {
+				|| (self::$flags & self::FLAG_NOTCACHEABLE)) {
 			$cacheable = false;
 		}
 
@@ -174,7 +192,7 @@ class Litespeedcache_Listener_Global
 			$serverVary = $request->getServer(self::COOKIE_LSCACHE_VARY_NAME);
 			if (in_array($options->litespeedcacheXF_logincookie,
 				explode(',', $serverVary))) {
-				self::$currentVary = $serverVary;
+				self::$currentVary = $options->litespeedcacheXF_logincookie;
 			}
 			else {
 				$cacheable = false;
@@ -436,12 +454,19 @@ class Litespeedcache_Listener_Global
 		$noPrefix = substr($controllerName, $prefixlen);
 		switch ($noPrefix[0]) {
 			case 'A':
-				if (($noPrefix != 'Admin_Forum')
-					|| (($action != 'Save') && ($action != 'Delete'))) {
-					return;
+				if (($noPrefix == 'Admin_Forum')
+					&& (($action == 'Save') || ($action == 'Delete'))) {
+					self::purgeByForumId($controller);
+					self::$purgeTags[] = self::CACHETAG_FORUMLIST;
 				}
-				self::purgeByForumId($controller);
-				self::$purgeTags[] = self::CACHETAG_FORUMLIST;
+				elseif ((self::$flags & self::FLAG_LOGINCOOKIECHANGED)
+					&& ($noPrefix == 'Admin_Option')
+					&& ($action == 'Save')) {
+					$options = $controller->getInput()->filterSingle('options',
+						XenForo_Input::ARRAY_SIMPLE);
+					$controllerResponse->redirectParams['litespeedcacheXF_logincookie']
+						= $options['litespeedcacheXF_logincookie'];
+				}
 				return;
 			case 'P':
 				if (strncmp($noPrefix, 'Public_', 7)) {

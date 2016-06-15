@@ -72,6 +72,17 @@ class Litespeedcache_Options
 		return true;
 	}
 
+
+	/**
+	 * Verify that the Login Cookie option is a valid setting.
+	 *
+	 * Will compare against setcookie list of valid characters.
+	 *
+	 * @param type $loginCookie
+	 * @param XenForo_DataWriter $dw
+	 * @param type $fieldname
+	 * @return boolean true if verified, false otherwise.
+	 */
 	public static function verifyLoginCookie($loginCookie,
 		XenForo_DataWriter $dw, $fieldname)
 	{
@@ -81,6 +92,7 @@ class Litespeedcache_Options
 					. 'invalid characters.'), $fieldname);
 			return false;
 		}
+		Litespeedcache_Listener_Global::changedLoginCookie();
 		return true;
 	}
 

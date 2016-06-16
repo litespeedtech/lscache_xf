@@ -158,6 +158,13 @@ class Litespeedcache_Listener_Global
 		setcookie(self::$currentVary, $cookieValue, $expiration, $path, $domain, $secure, $httpOnly);
 	}
 
+	public static function buildVaryString($loginCookie)
+	{
+		$cookiePrefix = XenForo_Application::get('config')->cookie->prefix;
+		return $cookiePrefix . 'style_id,' . $cookiePrefix . 'language_id,'
+			. $loginCookie;
+	}
+
 	/**
 	 * Front Controller Post View event listener.
 	 * Checks if the cache is enabled and the user is not logged in.
@@ -464,8 +471,9 @@ class Litespeedcache_Listener_Global
 					&& ($action == 'Save')) {
 					$options = $controller->getInput()->filterSingle('options',
 						XenForo_Input::ARRAY_SIMPLE);
-					$controllerResponse->redirectParams['litespeedcacheXF_logincookie']
-						= $options['litespeedcacheXF_logincookie'];
+					$cookiePrefix = XenForo_Application::get('config')->cookie->prefix;
+					$controllerResponse->redirectParams['lscache_rewriteparam']
+						= self::buildVaryString($options['litespeedcacheXF_logincookie']);
 				}
 				return;
 			case 'P':

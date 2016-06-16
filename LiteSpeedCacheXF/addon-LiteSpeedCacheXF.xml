@@ -42,29 +42,68 @@
 <p>{xen:phrase lscache_rewritedesc}
 </p>
 <br><br>
-<p style="word-wrap:break-word" class="textCtrl code">
+<textarea readonly style="word-wrap:break-word; width:600px; height:60px" class="textCtrl code">
 RewriteCond %{HTTP_USER_AGENT} NokiaN[^\/]*|\ Mobile(\ Safari)?\/|SymbianOS|Silk-Accelerated|Opera(\ |\/)(Mini|8|9\.[0-7])|IEMobile\/|^BlackBerry [NC]
 RewriteRule .* - [E=Cache-Control:vary=ismobile]
-</p>
+</textarea>
 </xen:form>]]></template>
     <template title="lscachesettings"><![CDATA[<xen:title>{xen:phrase lscache_settingstitle}</xen:title>
 
-<xen:form action="{xen:adminlink 'options/save'}" class="AutoValidator OptIn">
+<xen:require js="js/Litespeedcache/settings.js" />
+
+<div id="myImportantDiv" style="text-align:left"><p id="myImportantMessage"></p></br></br><p id="myImportantTextArea" style="white-space: pre-wrap"></p></div>
+<!-- <p>remove: {$removeMessage}</p>
+<p>show: {$showMessage}</p> -->
+<xen:form action="{xen:adminlink 'options/save'}" id="lscacheForm" class="AutoValidator OptIn">
 	{xen:raw $litespeedcacheXF_homettl}
 	{xen:raw $litespeedcacheXF_publicttl}
 	{xen:raw $litespeedcacheXF_logincookie}
-	<dl class="ctrlUnit">
-		<dt>
-		</dt>
-		<dd>
-			<span class="subHeading"><b>{xen:phrase lscache_rewritetrigger}</b>&nbsp;&nbsp;
-			<a href={xen:adminlink lscacherewrite} class="button OverlayTrigger">See Rewrite Rules</a>
-			</span>
-		</dd>
-	</dl>
-	{xen:raw $litespeedcacheXF_separatemobile}
+	<xen:checkboxunit label="{$lscacheoption_separatemobile.title}" explain="{$lscacheoption_separatemobile.explain}">
+
+			<xen:option name="{$fieldPrefix}[{$lscacheoption_separatemobile.option_id}]" selected="{$lscacheoption_separatemobile.option_value}">
+				<a href={xen:adminlink lscacherewrite} id="lscacheSeparateMobile2" class="OverlayTrigger">(more info)</a>
+			</xen:option>
+		<xen:html>
+			<input type="hidden" name="{$listedFieldName}" value="{$lscacheoption_separatemobile.option_id}" />
+			{xen:raw $editLink}
+		</xen:html>
+
+	</xen:checkboxunit>
+	<input hidden id="lscacheLoginCookieDesc" value='{xen:phrase lscache_logincookiedesc}'/>
+	<input hidden id="lscacheRewritePre" value='{xen:phrase lscache_rewritepre}'/>
+	<input hidden id="lscacheRewritePost" value='{xen:phrase lscache_rewritepost}'/>
+ 	<a href={xen:adminlink lscacherewrite} id="lscacheSeparateMobile" class="OverlayTrigger"></a>
+
 	<xen:submitunit save="{xen:phrase save}" />
-</xen:form>]]></template>
+</xen:form>
+<script>
+	$('[name="options[litespeedcacheXF_separatemobile]"]').change(function() {
+               	if($(this).prop('checked')) {
+        	    $('#lscacheSeparateMobile').click();
+        	    $(this).attr("checked", true);
+   		}
+ 	});
+ 	jQuery(document).ready(
+	XenForo.lscacheFormSave = function($form){
+		$form.bind('AutoValidationComplete', function(e)
+		{
+			if(e.ajaxData && e.ajaxData.lscache_rewriteparam)
+			{
+				if(!$('#myImportantDiv').hasClass("importantMessage"))
+				{
+					$('#myImportantDiv').toggleClass("importantMessage");
+					$('#myImportantTextArea').toggleClass("textCtrl");
+					$('#myImportantTextArea').toggleClass("code");
+				}
+				$('#myImportantMessage').text($('#lscacheLoginCookieDesc').val());
+				$('#myImportantTextArea').html($('#lscacheRewritePre').val()
+				+ e.ajaxData.lscache_rewriteparam
+				+ $('#lscacheRewritePost').val());
+			}
+		});
+	});
+ 	XenForo.register('#lscacheForm', 'XenForo.lscacheFormSave');
+</script>]]></template>
   </admin_templates>
   <admin_template_modifications/>
   <code_events/>
@@ -122,6 +161,7 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
     <phrase title="admin_navigation_lscache_settings" version_id="1" version_string="1.0.2"><![CDATA[Settings]]></phrase>
     <phrase title="lscache_actionsdesc" version_id="1" version_string="1.0.2"><![CDATA[The following actions may be used to manage the LiteSpeed Cache.]]></phrase>
     <phrase title="lscache_actionstitle" version_id="1" version_string="1.0.2"><![CDATA[Actions]]></phrase>
+    <phrase title="lscache_logincookiedesc" version_id="1" version_string="1.0.2.1"><![CDATA[IMPORTANT: Because you changed the login cookie, please make sure to edit the .htaccess file or your rewrite rule location to include the following rule. If you already have a rewrite rule, please replace it.]]></phrase>
     <phrase title="lscache_managedesc" version_id="1" version_string="1.0.2"><![CDATA[This is the LiteSpeed Cache Control Panel. Certain controls are available for use here.]]></phrase>
     <phrase title="lscache_managetitle" version_id="1" version_string="1.0.2"><![CDATA[LiteSpeed Cache Control Panel]]></phrase>
     <phrase title="lscache_purge_all" version_id="1" version_string="1.0.2"><![CDATA[Purge All]]></phrase>
@@ -130,6 +170,11 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
     <phrase title="lscache_purge_home_desc" version_id="1" version_string="1.0.2"><![CDATA[Purge Home will purge the home page/forum list from cache.]]></phrase>
     <phrase title="lscache_purge_success" version_id="1" version_string="1.0.2"><![CDATA[Purged the cache successfully.]]></phrase>
     <phrase title="lscache_rewritedesc" version_id="1" version_string="1.0.2"><![CDATA[In order to properly display separate mobile views, the following rewrite rule must be added to the .htaccess file in addition to setting the option.]]></phrase>
+    <phrase title="lscache_rewritepost" version_id="1" version_string="1.0.2.1"><![CDATA["]<br>
+### LSCACHE END LOGIN COOKIE ###]]></phrase>
+    <phrase title="lscache_rewritepre" version_id="1" version_string="1.0.2.1"><![CDATA[### LSCACHE START LOGIN COOKIE ###<br>
+RewriteRule .* - [E="cache-vary:
+]]></phrase>
     <phrase title="lscache_rewritetitle" version_id="1" version_string="1.0.2"><![CDATA[LiteSpeed Cache Separate Mobile Views]]></phrase>
     <phrase title="lscache_rewritetrigger" version_id="1" version_string="1.0.2"><![CDATA[IMPORTANT! PLEASE READ IF USING SEPARATE CACHE ENTRIES FOR MOBILE]]></phrase>
     <phrase title="lscache_settingstitle" version_id="1" version_string="1.0.2"><![CDATA[LiteSpeed Cache Add-On Settings]]></phrase>
@@ -141,8 +186,8 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
     <phrase title="option_litespeedcacheXF_logincookie_explain" version_id="1" version_string="1.0.2.1"><![CDATA[Default value is _lscache_vary. Customize the Login Cookie name used by the plugin to determine if the visitor is logged in.]]></phrase>
     <phrase title="option_litespeedcacheXF_publicttl" version_id="1" version_string="1.0.0"><![CDATA[Public TTL (seconds)]]></phrase>
     <phrase title="option_litespeedcacheXF_publicttl_explain" version_id="1" version_string="1.0.0"><![CDATA[Maximum time in seconds before a cached item is considered stale.]]></phrase>
-    <phrase title="option_litespeedcacheXF_separatemobile" version_id="1" version_string="1.0.2"><![CDATA[Separate Cache Entry for Mobile]]></phrase>
-    <phrase title="option_litespeedcacheXF_separatemobile_explain" version_id="1" version_string="1.0.2"><![CDATA[Some plugins have different views based on whether the visitor is using a mobile device or not. If the desktop and mobile views are different, use this option to cache them separately.]]></phrase>
+    <phrase title="option_litespeedcacheXF_separatemobile" version_id="1" version_string="1.0.2.1"><![CDATA[Separate Cache Entry for Mobile]]></phrase>
+    <phrase title="option_litespeedcacheXF_separatemobile_explain" version_id="1" version_string="1.0.2.1"><![CDATA[Some plugins have different views based on whether the visitor is using a mobile device or not. If the desktop and mobile views are different, use this option to cache them separately.]]></phrase>
   </phrases>
   <route_prefixes>
     <route_type type="admin">

@@ -11,7 +11,12 @@ class Litespeedcache_ControllerAdmin_Settings extends XenForo_ControllerAdmin_Ab
 	public function actionIndex()
 	{
 		$optionModel = $this->getModelFromCache('XenForo_Model_Option');
+		$fieldPrefix = 'options';
 		$viewParams = array(
+			'lscacheoption_separatemobile' => $optionModel->prepareOption(
+				$optionModel->getOptionById('litespeedcacheXF_separatemobile')),
+			'fieldPrefix' => $fieldPrefix,
+			'listedFieldName' => $fieldPrefix . '_listed[]',
 			'options' => $optionModel->prepareOptions(
 					$optionModel->getOptionsByIds(array('litespeedcacheXF_homettl',
 					'litespeedcacheXF_publicttl', 'litespeedcacheXF_logincookie',

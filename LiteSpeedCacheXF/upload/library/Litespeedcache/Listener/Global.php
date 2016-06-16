@@ -158,11 +158,42 @@ class Litespeedcache_Listener_Global
 		setcookie(self::$currentVary, $cookieValue, $expiration, $path, $domain, $secure, $httpOnly);
 	}
 
+	/**
+	 * Build the vary parameter for the rewrite rule fix.
+	 *
+	 * @param string $loginCookie
+	 * @return string
+	 */
 	public static function buildVaryString($loginCookie)
 	{
+		$vary = array($loginCookie);
 		$cookiePrefix = XenForo_Application::get('config')->cookie->prefix;
-		return $cookiePrefix . 'style_id,' . $cookiePrefix . 'language_id,'
-			. $loginCookie;
+		$styles = (XenForo_Application::isRegistered('styles')
+			? XenForo_Application::get('styles')
+			: XenForo_Model::create('XenForo_Model_Style')->getAllStyles()
+		);
+		$languages = (XenForo_Application::isRegistered('languages')
+			? XenForo_Application::get('languages')
+			: array()
+		);
+
+		$count = count($styles);
+		if ($count > 1) {
+			$count = 0;
+			foreach ($styles as $style) {
+				if ($style['user_selectable']) {
+					++$count;
+				}
+				if ($count > 1) {
+					$vary[] = $cookiePrefix . 'style_id';
+					break;
+				}
+			}
+		}
+		if (count($languages) > 1) {
+			$vary[] = $cookiePrefix . 'language_id';
+		}
+		return implode(',', $vary);
 	}
 
 	/**
@@ -186,6 +217,7 @@ class Litespeedcache_Listener_Global
 		$uri = $request->getRequestUri();
 		$options = XenForo_Application::getOptions();
 		$is_mobile = XenForo_Visitor::isBrowsingWith('mobile');
+		$serverVary = $request->getServer(self::COOKIE_LSCACHE_VARY_NAME);
 
 		if ((XenForo_Visitor::getUserId())
 				|| (strpos($uri, '/admin.php') !== false)
@@ -194,9 +226,8 @@ class Litespeedcache_Listener_Global
 			$cacheable = false;
 		}
 
-		if (($request->getServer(self::COOKIE_LSCACHE_VARY_NAME))
+		if (($serverVary)
 			&& ($options->litespeedcacheXF_logincookie != self::COOKIE_LSCACHE_VARY_DEFAULT)) {
-			$serverVary = $request->getServer(self::COOKIE_LSCACHE_VARY_NAME);
 			if (in_array($options->litespeedcacheXF_logincookie,
 				explode(',', $serverVary))) {
 				self::$currentVary = $options->litespeedcacheXF_logincookie;
@@ -469,11 +500,17 @@ class Litespeedcache_Listener_Global
 				elseif ((self::$flags & self::FLAG_LOGINCOOKIECHANGED)
 					&& ($noPrefix == 'Admin_Option')
 					&& ($action == 'Save')) {
+					$serverVary = $controller->getRequest()
+						->getServer(self::COOKIE_LSCACHE_VARY_NAME);
 					$options = $controller->getInput()->filterSingle('options',
 						XenForo_Input::ARRAY_SIMPLE);
-					$cookiePrefix = XenForo_Application::get('config')->cookie->prefix;
-					$controllerResponse->redirectParams['lscache_rewriteparam']
-						= self::buildVaryString($options['litespeedcacheXF_logincookie']);
+					if (($serverVary)
+						&& ($options['litespeedcacheXF_logincookie'] != self::COOKIE_LSCACHE_VARY_DEFAULT)
+						&& (!in_array($options['litespeedcacheXF_logincookie'],
+							explode(',', $serverVary)))) {
+						$controllerResponse->redirectParams['lscache_rewriteparam']
+							= self::buildVaryString($options['litespeedcacheXF_logincookie']);
+					}
 				}
 				return;
 			case 'P':

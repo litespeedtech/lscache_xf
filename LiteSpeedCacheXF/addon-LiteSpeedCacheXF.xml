@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<addon addon_id="LiteSpeedCacheXF" title="LiteSpeed Cache" version_string="1.0.2.1" version_id="1" url="https://www.litespeedtech.com/support/wiki/doku.php/litespeed_wiki:cache" install_callback_class="" install_callback_method="" uninstall_callback_class="" uninstall_callback_method="">
+<addon addon_id="LiteSpeedCacheXF" title="LiteSpeed Cache" version_string="1.0.3" version_id="4" url="https://www.litespeedtech.com/support/wiki/doku.php/litespeed_wiki:cache" install_callback_class="" install_callback_method="" uninstall_callback_class="" uninstall_callback_method="">
   <admin_navigation>
     <navigation navigation_id="actions" parent_navigation_id="lscache" display_order="1" link="lscache/actions" admin_permission_id="option" debug_only="0" hide_no_children="0"/>
     <navigation navigation_id="litespeedcache" parent_navigation_id="setup" display_order="110" link="" admin_permission_id="" debug_only="0" hide_no_children="0"/>
@@ -10,11 +10,11 @@
   <admin_style_properties/>
   <admin_templates>
     <template title="lscacheactions"><![CDATA[<xen:title>{xen:phrase lscache_actionstitle}</xen:title>
-
+<div id="myImportantDiv" style="text-align:left"><p id="myImportantMessage"></p></br></br><p id="myImportantTextArea" style="white-space: pre-wrap"></p></div>
 <h3>{xen:phrase lscache_actionsdesc}</h3>
-<br>
-<br>
-<xen:form action="{xen:adminlink 'lscache/actions'}" class="AutoValidator">
+</br>
+</br>
+<xen:form action="{xen:adminlink 'lscache/actions'}" id="lscacheActionForm" class="AutoValidator">
   <dl class="ctrlUnit">
     <dt>
       <input type="submit" name="lscache_action_submit" value="{xen:phrase lscache_purge_all}" class="button" />
@@ -31,7 +31,56 @@
       <p>{xen:phrase lscache_purge_home_desc}</p>
     </dd>
   </dl>
-</xen:form>]]></template>
+  <dl class="ctrlUnit">
+    <dt>
+      <input type="submit" name="lscache_action_submit" value="{xen:phrase lscache_verifysetup}" class="button" />
+    </dt>
+    <dd>
+      <p>{xen:phrase lscache_verifysetup_desc}</p>
+    </dd>
+  </dl>
+</xen:form>
+<input hidden id="lscacheVerifyDiffDesc" value='{xen:phrase lscache_verifysetup_diff}'/>
+<input hidden id="lscacheVerifySameDesc" value='{xen:phrase lscache_verifysetup_same}'/>
+<input hidden id="lscacheRewritePre" value='{xen:phrase lscache_rewritepre}'/>
+<input hidden id="lscacheRewritePost" value='{xen:phrase lscache_rewritepost}'/>
+<script>
+	function setImportantInformation()
+	{
+		if(!$('#myImportantDiv').hasClass("importantMessage"))
+		{
+			$('#myImportantDiv').toggleClass("importantMessage");
+			$('#myImportantTextArea').toggleClass("textCtrl");
+			$('#myImportantTextArea').toggleClass("code");
+		}
+
+	}
+ 	jQuery(document).ready(
+	XenForo.lscacheActionFormSave = function($form){
+		$form.bind('AutoValidationComplete', function(e)
+		{
+			if(e.ajaxData)
+			{
+				if(e.ajaxData.newrewrite)
+				{
+					setImportantInformation();
+					$('#myImportantMessage').text($('#lscacheVerifyDiffDesc').val());
+					$('#myImportantTextArea').html($('#lscacheRewritePre').val()
+					+ e.ajaxData.newrewrite
+					+ $('#lscacheRewritePost').val());
+				}
+				else if(e.ajaxData.origrewrite)
+				{
+					setImportantInformation();
+					$('#myImportantMessage').text($('#lscacheVerifySameDesc').val());
+					$('#myImportantTextArea').text("Your cache vary rewrite rule appears to be correct.");
+
+				}
+			}
+		});
+	});
+ 	XenForo.register('#lscacheActionForm', 'XenForo.lscacheActionFormSave');
+</script>]]></template>
     <template title="lscachemanageinfo"><![CDATA[<xen:title>{xen:phrase lscache_managetitle}</xen:title>
 
 <p>{xen:phrase lscache_managedesc}</p>
@@ -48,12 +97,7 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
 </textarea>
 </xen:form>]]></template>
     <template title="lscachesettings"><![CDATA[<xen:title>{xen:phrase lscache_settingstitle}</xen:title>
-
-<xen:require js="js/Litespeedcache/settings.js" />
-
 <div id="myImportantDiv" style="text-align:left"><p id="myImportantMessage"></p></br></br><p id="myImportantTextArea" style="white-space: pre-wrap"></p></div>
-<!-- <p>remove: {$removeMessage}</p>
-<p>show: {$showMessage}</p> -->
 <xen:form action="{xen:adminlink 'options/save'}" id="lscacheForm" class="AutoValidator OptIn">
 	{xen:raw $litespeedcacheXF_homettl}
 	{xen:raw $litespeedcacheXF_publicttl}
@@ -77,6 +121,30 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
 	<xen:submitunit save="{xen:phrase save}" />
 </xen:form>
 <script>
+	function setImportantInformation(rule)
+	{
+		if(!$('#myImportantDiv').hasClass("importantMessage"))
+		{
+			$('#myImportantDiv').toggleClass("importantMessage");
+			$('#myImportantTextArea').toggleClass("textCtrl");
+			$('#myImportantTextArea').toggleClass("code");
+		}
+		$('#myImportantMessage').text($('#lscacheLoginCookieDesc').val());
+		$('#myImportantTextArea').html($('#lscacheRewritePre').val()
+		+ rule
+		+ $('#lscacheRewritePost').val());
+	}
+	function hideImportantInfo()
+	{
+		if($('#myImportantDiv').hasClass("importantMessage"))
+		{
+			$('#myImportantDiv').toggleClass("importantMessage");
+			$('#myImportantTextArea').toggleClass("textCtrl");
+			$('#myImportantTextArea').toggleClass("code");
+			$('#myImportantMessage').text("");
+			$('#myImportantTextArea').text("");
+		}
+	}
 	$('[name="options[litespeedcacheXF_separatemobile]"]').change(function() {
                	if($(this).prop('checked')) {
         	    $('#lscacheSeparateMobile').click();
@@ -89,19 +157,24 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
 		{
 			if(e.ajaxData && e.ajaxData.lscache_rewriteparam)
 			{
-				if(!$('#myImportantDiv').hasClass("importantMessage"))
-				{
-					$('#myImportantDiv').toggleClass("importantMessage");
-					$('#myImportantTextArea').toggleClass("textCtrl");
-					$('#myImportantTextArea').toggleClass("code");
-				}
-				$('#myImportantMessage').text($('#lscacheLoginCookieDesc').val());
-				$('#myImportantTextArea').html($('#lscacheRewritePre').val()
-				+ e.ajaxData.lscache_rewriteparam
-				+ $('#lscacheRewritePost').val());
+				setImportantInformation(e.ajaxData.lscache_rewriteparam);
+			}
+			else
+			{
+				hideImportantInfo();
 			}
 		});
 	});
+	function displayImportantMessage()
+	{
+		<xen:if is="{$showMessage}">
+			setImportantInformation("{$showMessage}");
+		<xen:else />
+			hideImportantInfo();
+		</xen:if>
+	}
+
+	window.onload = displayImportantMessage;
  	XenForo.register('#lscacheForm', 'XenForo.lscacheFormSave');
 </script>]]></template>
   </admin_templates>
@@ -178,6 +251,11 @@ RewriteRule .* - [E="cache-vary:
     <phrase title="lscache_rewritetitle" version_id="1" version_string="1.0.2"><![CDATA[LiteSpeed Cache Separate Mobile Views]]></phrase>
     <phrase title="lscache_rewritetrigger" version_id="1" version_string="1.0.2"><![CDATA[IMPORTANT! PLEASE READ IF USING SEPARATE CACHE ENTRIES FOR MOBILE]]></phrase>
     <phrase title="lscache_settingstitle" version_id="1" version_string="1.0.2"><![CDATA[LiteSpeed Cache Add-On Settings]]></phrase>
+    <phrase title="lscache_verifysetup" version_id="1" version_string="1.0.2.1"><![CDATA[Verify Setup]]></phrase>
+    <phrase title="lscache_verifysetup_desc" version_id="1" version_string="1.0.2.1"><![CDATA[Verify that your settings and rewrite rules match.]]></phrase>
+    <phrase title="lscache_verifysetup_diff" version_id="4" version_string="1.0.3"><![CDATA[IMPORTANT: Verification has determined that your cache vary rewrite rule may be incorrect. Verification checks your settings against this rewrite rule for the possibility of language vary, theme vary, and login cookie vary. To match your settings, your cache vary rewrite rule should include at least the following.]]></phrase>
+    <phrase title="lscache_verifysetup_same" version_id="4" version_string="1.0.3"><![CDATA[IMPORTANT: Verification has determined that your cache vary rewrite rule is correct and should work. Verification checks your settings against this rewrite rule for the possibility of language vary, theme vary, and login cookie vary.]]></phrase>
+    <phrase title="lscache_verifysetup_success" version_id="1" version_string="1.0.2.1"><![CDATA[Successfully verified setup.]]></phrase>
     <phrase title="option_group_LiteSpeedCacheXF" version_id="1" version_string="1.0.0"><![CDATA[Litespeed Cache]]></phrase>
     <phrase title="option_group_LiteSpeedCacheXF_description" version_id="1" version_string="1.0.2"><![CDATA[These options control various aspects of the LiteSpeed Cache.]]></phrase>
     <phrase title="option_litespeedcacheXF_homettl" version_id="1" version_string="1.0.2"><![CDATA[Home Page TTL (seconds)]]></phrase>

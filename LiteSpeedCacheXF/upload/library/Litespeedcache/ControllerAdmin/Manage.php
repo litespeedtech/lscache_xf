@@ -37,11 +37,13 @@ class Litespeedcache_ControllerAdmin_Manage extends XenForo_ControllerAdmin_Abst
 	public function actionActions()
 	{
 		if ((!empty($_REQUEST)) && (isset($_REQUEST[self::ACTION_NAME]))) {
-			$response_msg = $this->parseActions();
+			$response_params = array();
+			$response_msg = $this->parseActions($response_params);
 			return $this->responseRedirect(
 				XenForo_ControllerResponse_Redirect::SUCCESS,
 				XenForo_Link::buildAdminLink('lscache/actions'),
-				$response_msg
+				$response_msg,
+				$response_params
 			);
 		}
 
@@ -51,15 +53,64 @@ class Litespeedcache_ControllerAdmin_Manage extends XenForo_ControllerAdmin_Abst
 	}
 
 	/**
+	 * Verify that the rewrite rules are correct.
+	 *
+	 * @return boolean
+	 */
+	private function verifySetup()
+	{
+		$search = array();
+		$loginCookie = XenForo_Application::getOptions()
+			->litespeedcacheXF_logincookie;
+		$cookiePrefix = XenForo_Application::get('config')->cookie->prefix;
+		$serverVary = $this->getRequest()->getServer(
+			Litespeedcache_Listener_Global::COOKIE_LSCACHE_VARY_NAME);
+		if ($serverVary) {
+			$serverVary = explode(',', $serverVary);
+		}
+		$styles = $this->getModelFromCache('XenForo_Model_Style')
+			->getAllStylesAsFlattenedTree();
+		$languages = $this->getModelFromCache('XenForo_Model_Language')
+			->getAllLanguagesAsFlattenedTree();
+
+		$count = count($styles);
+		if ($count > 1) {
+			$count = 0;
+			foreach ($styles as $style) {
+				if ($style['user_selectable']) {
+					++$count;
+				}
+				if ($count > 1) {
+					$search[] = $cookiePrefix . 'style_id';
+					break;
+				}
+			}
+		}
+		if (count($languages) > 1) {
+			$search[] = $cookiePrefix . 'language_id';
+		}
+		if ($loginCookie !=
+			Litespeedcache_Listener_Global::COOKIE_LSCACHE_VARY_NAME) {
+			$search[] = $loginCookie;
+		}
+		if ((empty($search)) || (empty(array_diff($search, $serverVary)))) {
+			return false;
+		}
+
+		return implode(',', $search);
+	}
+
+	/**
 	 * Parse for the action selected and do the action.
 	 *
 	 * @return mixed Redirect message on success, false on failure.
 	 */
-	private function parseActions()
+	private function parseActions(&$response_params)
 	{
 		$phrases = $this->getModelFromCache('XenForo_Model_Phrase');
 		$purge_all = $phrases->getMasterPhraseValue('lscache_purge_all');
 		$purge_home = $phrases->getMasterPhraseValue('lscache_purge_home');
+		$verifysetup = $phrases->getMasterPhraseValue('lscache_verifysetup');
 
 		switch($_REQUEST[self::ACTION_NAME]) {
 			case $purge_all:
@@ -69,6 +120,15 @@ class Litespeedcache_ControllerAdmin_Manage extends XenForo_ControllerAdmin_Abst
 				Litespeedcache_Listener_Global::addPurgeTag(
 						Litespeedcache_Listener_Global::CACHETAG_FORUMLIST);
 				return new XenForo_Phrase('lscache_purge_success');
+			case $verifysetup:
+				$diff = $this->verifySetup();
+				if ($diff) {
+					$response_params['newrewrite'] = $diff;
+				}
+				else {
+					$response_params['origrewrite'] = true;
+				}
+				return new XenForo_Phrase('lscache_verifysetup_success');
 			default:
 				break;
 		}

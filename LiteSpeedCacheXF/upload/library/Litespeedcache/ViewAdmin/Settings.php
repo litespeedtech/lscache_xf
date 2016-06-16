@@ -15,25 +15,19 @@ class Litespeedcache_ViewAdmin_Settings extends XenForo_ViewAdmin_Base
 					);
 		}
 
-		if (isset($serverVary)) {
-			if (!in_array($optionVary, $serverVary)) {
-				$this->_params['showMessage']
-					= Litespeedcache_Listener_Global::buildVaryString($optionVary);
-			}
-			elseif ($optionVary
-				== Litespeedcache_Listener_Global::COOKIE_LSCACHE_VARY_DEFAULT) {
-				$this->_params['removeMessage'] = true;
-			}
-		}
-		elseif ($optionVary
-			!= Litespeedcache_Listener_Global::COOKIE_LSCACHE_VARY_DEFAULT) {
+		if (((isset($serverVary))
+				&& (!in_array($optionVary, explode(',', $serverVary))))
+			|| ((!isset($serverVary))
+				&& ($optionVary != Litespeedcache_Listener_Global::COOKIE_LSCACHE_VARY_DEFAULT))) {
 			$this->_params['showMessage']
 				= Litespeedcache_Listener_Global::buildVaryString($optionVary);
 		}
-		$this->_params['editLink'] = $this->createTemplateObject('option_list_option_editlink', array(
-                        'preparedOption' => $this->_params['lscacheoption_separatemobile'],
-                        'canEditOptionDefinition' => $this->_params['canEditOptionDefinition']
-                ));
+
+		$this->_params['editLink'] =
+			$this->createTemplateObject('option_list_option_editlink', array(
+				'preparedOption' => $this->_params['lscacheoption_separatemobile'],
+				'canEditOptionDefinition' => $this->_params['canEditOptionDefinition']
+		));
 
 	}
 }

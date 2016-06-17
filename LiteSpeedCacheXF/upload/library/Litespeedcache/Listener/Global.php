@@ -557,16 +557,24 @@ class Litespeedcache_Listener_Global
 				}
 				break;
 			case 'Thread':
-				if (($action != 'AddReply')
-					|| (!($controllerResponse instanceof XenForo_ControllerResponse_View))) {
+				if (!($controllerResponse instanceof
+					XenForo_ControllerResponse_View)) {
 					break;
 				}
-				// If it is a thread add reply, need to check the replies.
-				// If any are not moderated, purge the cache.
-				foreach ($controllerResponse->params['posts'] as $post) {
-					if (!$post['isModerated']) {
-						self::purgeByThreadId($controller);
-						break;
+				if ($action == 'AddReply') {
+					// If it is a thread add reply, need to check the replies.
+					// If any are not moderated, purge the cache.
+					foreach ($controllerResponse->params['posts'] as $post) {
+						if (!$post['isModerated']) {
+							self::purgeByThreadId($controller);
+							break;
+						}
+					}
+				}
+				elseif ($action == 'Save') {
+					$thread = $controllerResponse->params['thread'];
+					if (!$thread['isModerated']) {
+						self::purgeByThreadId($controller, $thread['thread_id']);
 					}
 				}
 				break;

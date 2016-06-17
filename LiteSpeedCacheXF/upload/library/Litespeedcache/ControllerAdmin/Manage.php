@@ -90,7 +90,7 @@ class Litespeedcache_ControllerAdmin_Manage extends XenForo_ControllerAdmin_Abst
 			$search[] = $cookiePrefix . 'language_id';
 		}
 		if ($loginCookie !=
-			Litespeedcache_Listener_Global::COOKIE_LSCACHE_VARY_NAME) {
+			Litespeedcache_Listener_Global::COOKIE_LSCACHE_VARY_DEFAULT) {
 			$search[] = $loginCookie;
 		}
 		if ((empty($search)) || (empty(array_diff($search, $serverVary)))) {

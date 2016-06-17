@@ -15,6 +15,7 @@ class Litespeedcache_Listener_Global
 
 	const COOKIE_LSCACHE_VARY_DEFAULT = '_lscache_vary' ; // fixed name, cannot change
 	const COOKIE_LSCACHE_VARY_NAME = 'LSCACHE_VARY_COOKIE';
+	const LSCACHE_VARY_TEMPLATE_NAME = 'lscache_vary';
 	const STATE_LOGGEDIN = 1 ;
 	const STATE_STAYLOGGEDIN = 2 ;
 
@@ -460,6 +461,32 @@ class Litespeedcache_Listener_Global
 	}
 
 	/**
+	 * Compare the server vary with the setting vary.
+	 *
+	 * @param array $params
+	 * @param string $serverVary
+	 * @param string $optionVary
+	 */
+	public static function varyCmp(&$params, $serverVary, $optionVary = null)
+	{
+		if ($optionVary == null) {
+			$optionVary =
+				XenForo_Application::getOptions()->litespeedcacheXF_logincookie;
+		}
+		if (empty($serverVary)) {
+			if ($optionVary == self::COOKIE_LSCACHE_VARY_DEFAULT) {
+				return;
+			}
+		}
+		elseif (($optionVary == self::COOKIE_LSCACHE_VARY_DEFAULT)
+			|| (in_array($optionVary, explode(',', $serverVary)))) {
+			return;
+		}
+		$params[self::LSCACHE_VARY_TEMPLATE_NAME]
+			= self::buildVaryString($optionVary);
+	}
+
+	/**
 	 * Controller Post Dispatch Event Listener.
 	 * This will listen for the login controller + action and
 	 * any purge controller + action.
@@ -497,20 +524,14 @@ class Litespeedcache_Listener_Global
 					self::purgeByForumId($controller);
 					self::$purgeTags[] = self::CACHETAG_FORUMLIST;
 				}
-				elseif ((self::$flags & self::FLAG_LOGINCOOKIECHANGED)
-					&& ($noPrefix == 'Admin_Option')
+				elseif (($noPrefix == 'Admin_Option')
 					&& ($action == 'Save')) {
-					$serverVary = $controller->getRequest()
-						->getServer(self::COOKIE_LSCACHE_VARY_NAME);
-					$options = $controller->getInput()->filterSingle('options',
-						XenForo_Input::ARRAY_SIMPLE);
-					if (($serverVary)
-						&& ($options['litespeedcacheXF_logincookie'] != self::COOKIE_LSCACHE_VARY_DEFAULT)
-						&& (!in_array($options['litespeedcacheXF_logincookie'],
-							explode(',', $serverVary)))) {
-						$controllerResponse->redirectParams['lscache_rewriteparam']
-							= self::buildVaryString($options['litespeedcacheXF_logincookie']);
-					}
+					self::varyCmp($controllerResponse->redirectParams,
+						$controller->getRequest()
+							->getServer(self::COOKIE_LSCACHE_VARY_NAME),
+						$controller->getInput()->filterSingle('options',
+							XenForo_Input::ARRAY_SIMPLE)['litespeedcacheXF_logincookie']
+					);
 				}
 				return;
 			case 'P':

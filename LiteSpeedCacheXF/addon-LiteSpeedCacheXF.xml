@@ -9,11 +9,18 @@
   <admin_permissions/>
   <admin_style_properties/>
   <admin_templates>
-    <template title="lscacheactions"><![CDATA[<xen:title>{xen:phrase lscache_actionstitle}</xen:title>
-<div id="myImportantDiv" style="text-align:left"><p id="myImportantMessage"></p></br></br><p id="myImportantTextArea" style="white-space: pre-wrap"></p></div>
+    <template title="lscacheactions"><![CDATA[<xen:require css="lscache_acp.css" />
+<xen:title>{xen:phrase lscache_actionstitle}</xen:title>
+
+<div id="myImportantDiv" style="text-align:left;" class="importantMessage lscache-hide">
+	<img id="correctImage" src="styles/default/xenforo/permissions/allow.png" class="lscache-hide" />
+	<span id="myImportantMessage" class="lscache-hide"></span>
+	<br><br>
+	<p id="myImportantTextArea" class="textCtrl code lscache-hide"></p>
+</div>
 <h3>{xen:phrase lscache_actionsdesc}</h3>
-</br>
-</br>
+<br>
+<br>
 <xen:form action="{xen:adminlink 'lscache/actions'}" id="lscacheActionForm" class="AutoValidator">
   <dl class="ctrlUnit">
     <dt>
@@ -45,36 +52,40 @@
 <input hidden id="lscacheRewritePre" value='{xen:phrase lscache_rewritepre}'/>
 <input hidden id="lscacheRewritePost" value='{xen:phrase lscache_rewritepost}'/>
 <script>
-	function setImportantInformation()
-	{
-		if(!$('#myImportantDiv').hasClass("importantMessage"))
-		{
-			$('#myImportantDiv').toggleClass("importantMessage");
-			$('#myImportantTextArea').toggleClass("textCtrl");
-			$('#myImportantTextArea').toggleClass("code");
-		}
-
-	}
  	jQuery(document).ready(
 	XenForo.lscacheActionFormSave = function($form){
 		$form.bind('AutoValidationComplete', function(e)
 		{
+			var $textArea = $("#myImportantTextArea");
+			var $message = $("#myImportantMessage");
+			var $image = $("#correctImage");
+			var $div = $("#myImportantDiv");
 			if(e.ajaxData)
 			{
-				if(e.ajaxData.newrewrite)
+				if(e.ajaxData.lscache_vary == 1)
 				{
-					setImportantInformation();
-					$('#myImportantMessage').text($('#lscacheVerifyDiffDesc').val());
-					$('#myImportantTextArea').html($('#lscacheRewritePre').val()
-					+ e.ajaxData.newrewrite
+					$textArea.toggleClass("lscache-hide", true);
+					$image.toggleClass("lscache-hide", false);
+					$message.toggleClass("lscache-hide", false);
+					$div.toggleClass("lscache-hide", false);
+					$div.toggleClass("importantMessage", false);
+					$message.html("OK! - Your cache vary rewrite rule appears to be correct.");
+				}
+				else if(e.ajaxData.lscache_vary)
+				{
+					$div.toggleClass("importantMessage", true);
+					$div.toggleClass("lscache-hide", false);
+					$textArea.toggleClass("lscache-hide", false);
+					$message.toggleClass("lscache-hide", false);
+					$image.toggleClass("lscache-hide", true);
+					$message.text($('#lscacheVerifyDiffDesc').val());
+					$textArea.html($('#lscacheRewritePre').val()
+					+ e.ajaxData.lscache_vary
 					+ $('#lscacheRewritePost').val());
 				}
-				else if(e.ajaxData.origrewrite)
+				else
 				{
-					setImportantInformation();
-					$('#myImportantMessage').text($('#lscacheVerifySameDesc').val());
-					$('#myImportantTextArea').text("Your cache vary rewrite rule appears to be correct.");
-
+					$div.toggleClass("lscache-hide", true);
 				}
 			}
 		});
@@ -96,14 +107,18 @@ RewriteCond %{HTTP_USER_AGENT} NokiaN[^\/]*|\ Mobile(\ Safari)?\/|SymbianOS|Silk
 RewriteRule .* - [E=Cache-Control:vary=ismobile]
 </textarea>
 </xen:form>]]></template>
-    <template title="lscachesettings"><![CDATA[<xen:title>{xen:phrase lscache_settingstitle}</xen:title>
-<div id="myImportantDiv" style="text-align:left"><p id="myImportantMessage"></p></br></br><p id="myImportantTextArea" style="white-space: pre-wrap"></p></div>
+    <template title="lscachesettings"><![CDATA[<xen:require css="lscache_acp.css" />
+<xen:title>{xen:phrase lscache_settingstitle}</xen:title>
+<div id="myImportantDiv" class="importantMessage lscache-hide" style="text-align:left">
+	<p id="myImportantMessage" class="lscache-hide"></p>
+	<br><br>
+	<p id="myImportantTextArea" class="textCtrl code lscache-hide"></p>
+</div>
 <xen:form action="{xen:adminlink 'options/save'}" id="lscacheForm" class="AutoValidator OptIn">
 	{xen:raw $litespeedcacheXF_homettl}
 	{xen:raw $litespeedcacheXF_publicttl}
 	{xen:raw $litespeedcacheXF_logincookie}
 	<xen:checkboxunit label="{$lscacheoption_separatemobile.title}" explain="{$lscacheoption_separatemobile.explain}">
-
 			<xen:option name="{$fieldPrefix}[{$lscacheoption_separatemobile.option_id}]" selected="{$lscacheoption_separatemobile.option_value}">
 				<a href={xen:adminlink lscacherewrite} id="lscacheSeparateMobile2" class="OverlayTrigger">(more info)</a>
 			</xen:option>
@@ -111,39 +126,31 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
 			<input type="hidden" name="{$listedFieldName}" value="{$lscacheoption_separatemobile.option_id}" />
 			{xen:raw $editLink}
 		</xen:html>
-
 	</xen:checkboxunit>
 	<input hidden id="lscacheLoginCookieDesc" value='{xen:phrase lscache_logincookiedesc}'/>
 	<input hidden id="lscacheRewritePre" value='{xen:phrase lscache_rewritepre}'/>
 	<input hidden id="lscacheRewritePost" value='{xen:phrase lscache_rewritepost}'/>
  	<a href={xen:adminlink lscacherewrite} id="lscacheSeparateMobile" class="OverlayTrigger"></a>
-
 	<xen:submitunit save="{xen:phrase save}" />
 </xen:form>
 <script>
 	function setImportantInformation(rule)
 	{
-		if(!$('#myImportantDiv').hasClass("importantMessage"))
-		{
-			$('#myImportantDiv').toggleClass("importantMessage");
-			$('#myImportantTextArea').toggleClass("textCtrl");
-			$('#myImportantTextArea').toggleClass("code");
-		}
-		$('#myImportantMessage').text($('#lscacheLoginCookieDesc').val());
-		$('#myImportantTextArea').html($('#lscacheRewritePre').val()
+		var $message = $("#myImportantMessage");
+		var $textArea = $("#myImportantTextArea");
+		$('#myImportantDiv').toggleClass("lscache-hide", false);
+		$message.toggleClass("lscache-hide", false);
+		$message.text($('#lscacheLoginCookieDesc').val());
+		$textArea.toggleClass("lscache-hide", false);
+		$textArea.html($('#lscacheRewritePre').val()
 		+ rule
 		+ $('#lscacheRewritePost').val());
 	}
 	function hideImportantInfo()
 	{
-		if($('#myImportantDiv').hasClass("importantMessage"))
-		{
-			$('#myImportantDiv').toggleClass("importantMessage");
-			$('#myImportantTextArea').toggleClass("textCtrl");
-			$('#myImportantTextArea').toggleClass("code");
-			$('#myImportantMessage').text("");
-			$('#myImportantTextArea').text("");
-		}
+		var $textArea = $("#myImportantTextArea");
+		$('#myImportantDiv').toggleClass("lscache-hide", true);
+		$textArea.toggleClass("lscache-hide", true);
 	}
 	$('[name="options[litespeedcacheXF_separatemobile]"]').change(function() {
                	if($(this).prop('checked')) {
@@ -155,9 +162,13 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
 	XenForo.lscacheFormSave = function($form){
 		$form.bind('AutoValidationComplete', function(e)
 		{
-			if(e.ajaxData && e.ajaxData.lscache_rewriteparam)
+			if(e.ajaxData && e.ajaxData.lscache_vary)
 			{
-				setImportantInformation(e.ajaxData.lscache_rewriteparam);
+				if(e.ajaxData.lscache_vary == 1){}
+				else
+				{
+					setImportantInformation(e.ajaxData.lscache_vary);
+				}
 			}
 			else
 			{
@@ -167,8 +178,8 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
 	});
 	function displayImportantMessage()
 	{
-		<xen:if is="{$showMessage}">
-			setImportantInformation("{$showMessage}");
+		<xen:if is="{$lscache_vary}">
+			setImportantInformation("{$lscache_vary}");
 		<xen:else />
 			hideImportantInfo();
 		</xen:if>
@@ -177,6 +188,10 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
 	window.onload = displayImportantMessage;
  	XenForo.register('#lscacheForm', 'XenForo.lscacheFormSave');
 </script>]]></template>
+    <template title="lscache_acp.css"><![CDATA[.lscache-hide {
+	display: none;
+}
+]]></template>
   </admin_templates>
   <admin_template_modifications/>
   <code_events/>
@@ -234,7 +249,7 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
     <phrase title="admin_navigation_lscache_settings" version_id="1" version_string="1.0.2"><![CDATA[Settings]]></phrase>
     <phrase title="lscache_actionsdesc" version_id="1" version_string="1.0.2"><![CDATA[The following actions may be used to manage the LiteSpeed Cache.]]></phrase>
     <phrase title="lscache_actionstitle" version_id="1" version_string="1.0.2"><![CDATA[Actions]]></phrase>
-    <phrase title="lscache_logincookiedesc" version_id="1" version_string="1.0.2.1"><![CDATA[IMPORTANT: Because you changed the login cookie, please make sure to edit the .htaccess file or your rewrite rule location to include the following rule. If you already have a rewrite rule, please replace it.]]></phrase>
+    <phrase title="lscache_logincookiedesc" version_id="1" version_string="1.0.3"><![CDATA[IMPORTANT: Because you changed the login cookie, please make sure to edit the .htaccess file or your rewrite rule location to include the following rule. If you already have a rewrite rule, please replace it.]]></phrase>
     <phrase title="lscache_managedesc" version_id="1" version_string="1.0.2"><![CDATA[This is the LiteSpeed Cache Control Panel. Certain controls are available for use here.]]></phrase>
     <phrase title="lscache_managetitle" version_id="1" version_string="1.0.2"><![CDATA[LiteSpeed Cache Control Panel]]></phrase>
     <phrase title="lscache_purge_all" version_id="1" version_string="1.0.2"><![CDATA[Purge All]]></phrase>
@@ -243,29 +258,29 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
     <phrase title="lscache_purge_home_desc" version_id="1" version_string="1.0.2"><![CDATA[Purge Home will purge the home page/forum list from cache.]]></phrase>
     <phrase title="lscache_purge_success" version_id="1" version_string="1.0.2"><![CDATA[Purged the cache successfully.]]></phrase>
     <phrase title="lscache_rewritedesc" version_id="1" version_string="1.0.2"><![CDATA[In order to properly display separate mobile views, the following rewrite rule must be added to the .htaccess file in addition to setting the option.]]></phrase>
-    <phrase title="lscache_rewritepost" version_id="1" version_string="1.0.2.1"><![CDATA["]<br>
+    <phrase title="lscache_rewritepost" version_id="1" version_string="1.0.3"><![CDATA["]<br>
 ### LSCACHE END LOGIN COOKIE ###]]></phrase>
-    <phrase title="lscache_rewritepre" version_id="1" version_string="1.0.2.1"><![CDATA[### LSCACHE START LOGIN COOKIE ###<br>
+    <phrase title="lscache_rewritepre" version_id="1" version_string="1.0.3"><![CDATA[### LSCACHE START LOGIN COOKIE ###<br>
 RewriteRule .* - [E="cache-vary:
 ]]></phrase>
     <phrase title="lscache_rewritetitle" version_id="1" version_string="1.0.2"><![CDATA[LiteSpeed Cache Separate Mobile Views]]></phrase>
     <phrase title="lscache_rewritetrigger" version_id="1" version_string="1.0.2"><![CDATA[IMPORTANT! PLEASE READ IF USING SEPARATE CACHE ENTRIES FOR MOBILE]]></phrase>
     <phrase title="lscache_settingstitle" version_id="1" version_string="1.0.2"><![CDATA[LiteSpeed Cache Add-On Settings]]></phrase>
-    <phrase title="lscache_verifysetup" version_id="1" version_string="1.0.2.1"><![CDATA[Verify Setup]]></phrase>
-    <phrase title="lscache_verifysetup_desc" version_id="1" version_string="1.0.2.1"><![CDATA[Verify that your settings and rewrite rules match.]]></phrase>
+    <phrase title="lscache_verifysetup" version_id="1" version_string="1.0.3"><![CDATA[Verify Setup]]></phrase>
+    <phrase title="lscache_verifysetup_desc" version_id="1" version_string="1.0.3"><![CDATA[Verify that your settings and rewrite rules match.]]></phrase>
     <phrase title="lscache_verifysetup_diff" version_id="4" version_string="1.0.3"><![CDATA[IMPORTANT: Verification has determined that your cache vary rewrite rule may be incorrect. Verification checks your settings against this rewrite rule for the possibility of language vary, theme vary, and login cookie vary. To match your settings, your cache vary rewrite rule should include at least the following.]]></phrase>
     <phrase title="lscache_verifysetup_same" version_id="4" version_string="1.0.3"><![CDATA[IMPORTANT: Verification has determined that your cache vary rewrite rule is correct and should work. Verification checks your settings against this rewrite rule for the possibility of language vary, theme vary, and login cookie vary.]]></phrase>
-    <phrase title="lscache_verifysetup_success" version_id="1" version_string="1.0.2.1"><![CDATA[Successfully verified setup.]]></phrase>
+    <phrase title="lscache_verifysetup_success" version_id="1" version_string="1.0.3"><![CDATA[Successfully verified setup.]]></phrase>
     <phrase title="option_group_LiteSpeedCacheXF" version_id="1" version_string="1.0.0"><![CDATA[Litespeed Cache]]></phrase>
     <phrase title="option_group_LiteSpeedCacheXF_description" version_id="1" version_string="1.0.2"><![CDATA[These options control various aspects of the LiteSpeed Cache.]]></phrase>
     <phrase title="option_litespeedcacheXF_homettl" version_id="1" version_string="1.0.2"><![CDATA[Home Page TTL (seconds)]]></phrase>
     <phrase title="option_litespeedcacheXF_homettl_explain" version_id="1" version_string="1.0.2"><![CDATA[Maximum time in seconds before the home page/forum list is considered stale.]]></phrase>
-    <phrase title="option_litespeedcacheXF_logincookie" version_id="1" version_string="1.0.2.1"><![CDATA[Login Cookie]]></phrase>
-    <phrase title="option_litespeedcacheXF_logincookie_explain" version_id="1" version_string="1.0.2.1"><![CDATA[Default value is _lscache_vary. Customize the Login Cookie name used by the plugin to determine if the visitor is logged in.]]></phrase>
+    <phrase title="option_litespeedcacheXF_logincookie" version_id="1" version_string="1.0.3"><![CDATA[Login Cookie]]></phrase>
+    <phrase title="option_litespeedcacheXF_logincookie_explain" version_id="1" version_string="1.0.3"><![CDATA[Default value is _lscache_vary. Customize the Login Cookie name used by the plugin to determine if the visitor is logged in.]]></phrase>
     <phrase title="option_litespeedcacheXF_publicttl" version_id="1" version_string="1.0.0"><![CDATA[Public TTL (seconds)]]></phrase>
     <phrase title="option_litespeedcacheXF_publicttl_explain" version_id="1" version_string="1.0.0"><![CDATA[Maximum time in seconds before a cached item is considered stale.]]></phrase>
-    <phrase title="option_litespeedcacheXF_separatemobile" version_id="1" version_string="1.0.2.1"><![CDATA[Separate Cache Entry for Mobile]]></phrase>
-    <phrase title="option_litespeedcacheXF_separatemobile_explain" version_id="1" version_string="1.0.2.1"><![CDATA[Some plugins have different views based on whether the visitor is using a mobile device or not. If the desktop and mobile views are different, use this option to cache them separately.]]></phrase>
+    <phrase title="option_litespeedcacheXF_separatemobile" version_id="1" version_string="1.0.3"><![CDATA[Separate Cache Entry for Mobile]]></phrase>
+    <phrase title="option_litespeedcacheXF_separatemobile_explain" version_id="1" version_string="1.0.3"><![CDATA[Some plugins have different views based on whether the visitor is using a mobile device or not. If the desktop and mobile views are different, use this option to cache them separately.]]></phrase>
   </phrases>
   <route_prefixes>
     <route_type type="admin">

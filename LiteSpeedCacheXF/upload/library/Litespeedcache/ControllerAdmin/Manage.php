@@ -57,7 +57,7 @@ class Litespeedcache_ControllerAdmin_Manage extends XenForo_ControllerAdmin_Abst
 	 *
 	 * @return boolean
 	 */
-	private function verifySetup()
+	private function verifySetup(&$params)
 	{
 		$search = array();
 		$loginCookie = XenForo_Application::getOptions()
@@ -94,10 +94,13 @@ class Litespeedcache_ControllerAdmin_Manage extends XenForo_ControllerAdmin_Abst
 			$search[] = $loginCookie;
 		}
 		if ((empty($search)) || (empty(array_diff($search, $serverVary)))) {
-			return false;
+			$params[Litespeedcache_Listener_Global::LSCACHE_VARY_TEMPLATE_NAME]
+				= 1;
 		}
-
-		return implode(',', $search);
+		else {
+			$params[Litespeedcache_Listener_Global::LSCACHE_VARY_TEMPLATE_NAME]
+				= implode(',', $search);
+		}
 	}
 
 	/**
@@ -121,13 +124,7 @@ class Litespeedcache_ControllerAdmin_Manage extends XenForo_ControllerAdmin_Abst
 						Litespeedcache_Listener_Global::CACHETAG_FORUMLIST);
 				return new XenForo_Phrase('lscache_purge_success');
 			case $verifysetup:
-				$diff = $this->verifySetup();
-				if ($diff) {
-					$response_params['newrewrite'] = $diff;
-				}
-				else {
-					$response_params['origrewrite'] = true;
-				}
+				$this->verifySetup($response_params);
 				return new XenForo_Phrase('lscache_verifysetup_success');
 			default:
 				break;

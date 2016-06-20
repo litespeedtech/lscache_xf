@@ -64,8 +64,8 @@ class Litespeedcache_ControllerAdmin_Manage extends XenForo_ControllerAdmin_Abst
 			->litespeedcacheXF_logincookie;
 		$cookiePrefix = XenForo_Application::get('config')->cookie->prefix;
 		$serverVary = $this->getRequest()->getServer(
-			Litespeedcache_Listener_Global::COOKIE_LSCACHE_VARY_NAME);
-		if ($serverVary) {
+			Litespeedcache_Listener_Global::COOKIE_LSCACHE_VARY_NAME, array());
+		if (is_string($serverVary)) {
 			$serverVary = explode(',', $serverVary);
 		}
 		$styles = $this->getModelFromCache('XenForo_Model_Style')

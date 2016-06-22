@@ -270,7 +270,7 @@ RewriteRule .* - [E="cache-vary:
     <phrase title="lscache_verifysetup_desc" version_id="1" version_string="1.0.3"><![CDATA[Verify that your settings and rewrite rules match.]]></phrase>
     <phrase title="lscache_verifysetup_diff" version_id="4" version_string="1.0.3"><![CDATA[IMPORTANT: Verification has determined that your cache vary rewrite rule may be incorrect. Verification checks your settings against this rewrite rule for the possibility of language vary, theme vary, and login cookie vary. To match your settings, your cache vary rewrite rule should include at least the following.]]></phrase>
     <phrase title="lscache_verifysetup_same" version_id="4" version_string="1.0.3"><![CDATA[IMPORTANT: Verification has determined that your cache vary rewrite rule is correct and should work. Verification checks your settings against this rewrite rule for the possibility of language vary, theme vary, and login cookie vary.]]></phrase>
-    <phrase title="lscache_verifysetup_success" version_id="1" version_string="1.0.3"><![CDATA[Successfully verified setup.]]></phrase>
+    <phrase title="lscache_verifysetup_success" version_id="5" version_string="1.0.3.1"><![CDATA[Setup verification complete]]></phrase>
     <phrase title="option_group_LiteSpeedCacheXF" version_id="1" version_string="1.0.0"><![CDATA[Litespeed Cache]]></phrase>
     <phrase title="option_group_LiteSpeedCacheXF_description" version_id="1" version_string="1.0.2"><![CDATA[These options control various aspects of the LiteSpeed Cache.]]></phrase>
     <phrase title="option_litespeedcacheXF_homettl" version_id="1" version_string="1.0.2"><![CDATA[Home Page TTL (seconds)]]></phrase>

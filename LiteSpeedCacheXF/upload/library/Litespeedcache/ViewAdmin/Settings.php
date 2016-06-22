@@ -13,7 +13,9 @@ class Litespeedcache_ViewAdmin_Settings extends XenForo_ViewAdmin_Base
 
 		Litespeedcache_Listener_Global::varyCmp(
 			$this->_params,
-			$_SERVER[Litespeedcache_Listener_Global::COOKIE_LSCACHE_VARY_NAME]
+			$this->_renderer->getRequest()->getServer(
+				Litespeedcache_Listener_Global::COOKIE_LSCACHE_VARY_NAME,
+				array())
 		);
 
 		$this->_params['editLink'] =

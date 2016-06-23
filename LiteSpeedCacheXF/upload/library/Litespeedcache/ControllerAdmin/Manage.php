@@ -93,7 +93,8 @@ class Litespeedcache_ControllerAdmin_Manage extends XenForo_ControllerAdmin_Abst
 			Litespeedcache_Listener_Global::COOKIE_LSCACHE_VARY_DEFAULT) {
 			$search[] = $loginCookie;
 		}
-		if ((empty($search)) || (empty(array_diff($search, $serverVary)))) {
+		$diff = array_diff($search, $serverVary);
+		if ((empty($search)) || (empty($diff))) {
 			$params[Litespeedcache_Listener_Global::LSCACHE_VARY_TEMPLATE_NAME]
 				= 1;
 		}

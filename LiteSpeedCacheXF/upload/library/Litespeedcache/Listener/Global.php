@@ -621,7 +621,9 @@ class Litespeedcache_Listener_Global
 				}
 				break;
 			case 'Register':
-				if (($action == 'Facebook') || ($action == 'Google') || ($action == 'Twitter')) {
+				if ((strncmp($action, 'Facebook', 8) == 0)
+					|| (strncmp($action, 'Google', 6) == 0)
+					|| (strncmp($action, 'Twitter', 7) == 0)) {
 					self::setNotCacheable('External login (e.g. Facebook).');
 				}
 				break;

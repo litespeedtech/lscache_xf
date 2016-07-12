@@ -508,8 +508,11 @@ class Litespeedcache_Listener_Global
 		$actionStart = array(
 			'A', // AddThread, AddReply, Approve
 			'D', // Delete
+			'F', // Facebook, FacebookRegister
+			'G', // Google, GoogleRegister
 			'L', // Login
-			'S', // Save, SaveInline
+			'S', // Save, SaveInline, Style, Language
+			'T', // Twitter, TwitterRegister
 		);
 		if ((strncmp($controllerName, $prefix, $prefixlen) != 0)
 				|| (!in_array($action[0], $actionStart))) {

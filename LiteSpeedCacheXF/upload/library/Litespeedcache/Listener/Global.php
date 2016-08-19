@@ -529,12 +529,16 @@ class Litespeedcache_Listener_Global
 				}
 				elseif (($noPrefix == 'Admin_Option')
 					&& ($action == 'Save')) {
-					self::varyCmp($controllerResponse->redirectParams,
-						$controller->getRequest()
-							->getServer(self::COOKIE_LSCACHE_VARY_NAME),
-						$controller->getInput()->filterSingle('options',
-							XenForo_Input::ARRAY_SIMPLE)['litespeedcacheXF_logincookie']
-					);
+					$options = $controller->getInput()->filterSingle('options',
+							XenForo_Input::ARRAY_SIMPLE);
+					if ((!empty($options))
+						&& (isset($options['litespeedcacheXF_logincookie']))) {
+						self::varyCmp($controllerResponse->redirectParams,
+							$controller->getRequest()
+								->getServer(self::COOKIE_LSCACHE_VARY_NAME),
+							$options['litespeedcacheXF_logincookie']
+						);
+					}
 				}
 				return;
 			case 'P':

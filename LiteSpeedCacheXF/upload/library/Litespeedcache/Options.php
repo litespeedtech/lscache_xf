@@ -72,7 +72,6 @@ class Litespeedcache_Options
 		return true;
 	}
 
-
 	/**
 	 * Verify that the Login Cookie option is a valid setting.
 	 *
@@ -93,6 +92,28 @@ class Litespeedcache_Options
 			return false;
 		}
 		Litespeedcache_Listener_Global::changedLoginCookie();
+		return true;
+	}
+
+
+	/**
+	 * Verify that the Cache Prefix option is a valid setting.
+	 *
+	 * Will compare against setcookie list of valid characters.
+	 *
+	 * @param type $loginCookie
+	 * @param XenForo_DataWriter $dw
+	 * @param type $fieldname
+	 * @return boolean true if verified, false otherwise.
+	 */
+	public static function verifyCachePrefix($prefix,
+		XenForo_DataWriter $dw, $fieldname)
+	{
+		if (($prefix !== '') && (!ctype_alnum($prefix))) {
+			$dw->error(new XenForo_Phrase('The cache prefix contained '
+					. 'invalid characters.'), $fieldname);
+		}
+		Litespeedcache_Listener_Global::addPurgeTag('*');
 		return true;
 	}
 

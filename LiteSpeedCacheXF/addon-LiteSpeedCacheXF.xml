@@ -206,6 +206,12 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
   <email_template_modifications/>
   <optiongroups>
     <group group_id="LiteSpeedCacheXF" display_order="1000" debug_only="0"/>
+    <option option_id="litespeedcacheXF_cacheprefix" edit_format="textbox" data_type="string" can_backup="1" validation_class="Litespeedcache_Options" validation_method="verifyCachePrefix">
+      <default_value></default_value>
+      <edit_format_params></edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="LiteSpeedCacheXF" display_order="40"/>
+    </option>
     <option option_id="litespeedcacheXF_homettl" edit_format="textbox" data_type="integer" can_backup="1" validation_class="Litespeedcache_Options" validation_method="verifyHomeTTL">
       <default_value>300</default_value>
       <edit_format_params></edit_format_params>
@@ -273,6 +279,8 @@ RewriteRule .* - [E="cache-vary:
     <phrase title="lscache_verifysetup_success" version_id="5" version_string="1.0.3.1"><![CDATA[Setup verification complete]]></phrase>
     <phrase title="option_group_LiteSpeedCacheXF" version_id="1" version_string="1.0.0"><![CDATA[Litespeed Cache]]></phrase>
     <phrase title="option_group_LiteSpeedCacheXF_description" version_id="1" version_string="1.0.2"><![CDATA[These options control various aspects of the LiteSpeed Cache.]]></phrase>
+    <phrase title="option_litespeedcacheXF_cacheprefix" version_id="5" version_string="1.0.3.1"><![CDATA[Cache Prefix]]></phrase>
+    <phrase title="option_litespeedcacheXF_cacheprefix_explain" version_id="5" version_string="1.0.3.1"><![CDATA[Add an alpha-numeric prefix to cache and purge tags.This can be used to prevent issues when using multiple LiteSpeed caching extensions on the same server.]]></phrase>
     <phrase title="option_litespeedcacheXF_homettl" version_id="1" version_string="1.0.2"><![CDATA[Home Page TTL (seconds)]]></phrase>
     <phrase title="option_litespeedcacheXF_homettl_explain" version_id="1" version_string="1.0.2"><![CDATA[Maximum time in seconds before the home page/forum list is considered stale.]]></phrase>
     <phrase title="option_litespeedcacheXF_logincookie" version_id="1" version_string="1.0.3"><![CDATA[Login Cookie]]></phrase>

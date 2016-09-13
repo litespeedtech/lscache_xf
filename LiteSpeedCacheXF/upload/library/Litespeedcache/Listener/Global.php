@@ -19,6 +19,7 @@ class Litespeedcache_Listener_Global
 	const STATE_LOGGEDIN = 1 ;
 	const STATE_STAYLOGGEDIN = 2 ;
 
+	const CACHEPREFIX_XF = 'XF_';
 	const CACHETAG_FORUMLIST = 'H';
 	const CACHETAG_FORUM = 'F.';
 	const CACHETAG_THREAD = 'T.';
@@ -197,6 +198,21 @@ class Litespeedcache_Listener_Global
 		return implode(',', $vary);
 	}
 
+
+	private static function prefix_apply($tag)
+	{
+		static $prefix = null;
+		if (is_null($prefix)) {
+			$options = XenForo_Application::getOptions();
+			$prefix = $options->litespeedcacheXF_cacheprefix;
+			if (empty($prefix)) {
+				$prefix = '';
+			}
+			$prefix .= self::CACHEPREFIX_XF;
+		}
+		return $prefix . $tag;
+	}
+
 	/**
 	 * Front Controller Post View event listener.
 	 * Checks if the cache is enabled and the user is not logged in.
@@ -261,11 +277,17 @@ class Litespeedcache_Listener_Global
 			}
 			if (!empty(self::$cacheTags)) {
 				$tags = array_unique(self::$cacheTags);
-				$response->setHeader(self::HEADER_CACHE_TAG,
-						implode(',', $tags));
 			}
-			if ((isset($tags))
-					&& (in_array(self::CACHETAG_FORUMLIST, $tags))) {
+			else {
+				$tags = array();
+			}
+			$tags[] = ''; // add blank entry to add XF tag
+
+			$prefix_tags = array_map('self::prefix_apply', $tags);
+			$tagstr = implode(',', $prefix_tags);
+
+			$response->setHeader(self::HEADER_CACHE_TAG, $tagstr);
+			if (in_array(self::CACHETAG_FORUMLIST, $tags)) {
 				$maxage = $options->litespeedcacheXF_homettl;
 			}
 			else {
@@ -289,13 +311,15 @@ class Litespeedcache_Listener_Global
 
 		if (!empty(self::$purgeTags)) {
 			if (in_array('*', self::$purgeTags)) {
-				$tags = '*';
+				$tags = array('');
 			}
 			else {
 				self::$purgeTags[] = self::CACHETAG_FORUMLIST;
-				$tags = implode(',', array_unique(self::$purgeTags));
+				$tags = array_unique(self::$purgeTags);
 			}
-			$response->setHeader(self::HEADER_PURGE, $tags);
+			$prefix_tags = array_map('self::prefix_apply', $tags);
+			$tagstr = implode(',', $prefix_tags);
+			$response->setHeader(self::HEADER_PURGE, $tagstr);
 		}
 
 		/* This header is used to handle XenForo's cookie detection.

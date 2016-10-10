@@ -20,7 +20,7 @@ class Litespeedcache_ControllerAdmin_Settings extends XenForo_ControllerAdmin_Ab
 			'options' => $optionModel->prepareOptions(
 					$optionModel->getOptionsByIds(array('litespeedcacheXF_homettl',
 					'litespeedcacheXF_publicttl', 'litespeedcacheXF_logincookie',
-					'litespeedcacheXF_separatemobile'))),
+					'litespeedcacheXF_separatemobile', 'litespeedcacheXF_nocacheuri'))),
 			'canEditOptionDefinition' => $optionModel->canEditOptionAndGroupDefinitions()
 		);
 

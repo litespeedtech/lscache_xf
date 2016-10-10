@@ -101,7 +101,7 @@ class Litespeedcache_Options
 	 *
 	 * Will compare against setcookie list of valid characters.
 	 *
-	 * @param type $loginCookie
+	 * @param type $prefix
 	 * @param XenForo_DataWriter $dw
 	 * @param type $fieldname
 	 * @return boolean true if verified, false otherwise.
@@ -135,6 +135,42 @@ class Litespeedcache_Options
 			return false;
 		}
 		return true;
+	}
+
+
+	/**
+	 * Verify that the Do Not Cache URI option is a valid setting.
+	 *
+	 * Will verify against a small regex.
+	 *
+	 * @param type $input
+	 * @param XenForo_DataWriter $dw
+	 * @param type $fieldname
+	 * @return mixed string if verified and not empty,
+	 * true if verified and empty, false otherwise.
+	 */
+	public static function verifyDoNotCacheUri($input,
+		XenForo_DataWriter $dw, $fieldname)
+	{
+		$trimmed = trim($input);
+		if (empty($trimmed)) {
+			return true;
+		}
+		$list = explode("\n", $input);
+		if (empty($list)) {
+			return true;
+		}
+		foreach ($list as $key=>$val) {
+			if (preg_match('!^/.*\$?$!', $val) == 0) {
+				$dw->error(new XenForo_Phrase('Invalid URI: ' . $val),
+					$fieldname);
+				return false;
+			}
+			$list[$key] = trim($val);
+		}
+
+		Litespeedcache_Listener_Global::addPurgeTag('*');
+		return implode("\n", $list);
 	}
 
 }

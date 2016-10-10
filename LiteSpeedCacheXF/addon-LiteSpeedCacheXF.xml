@@ -127,6 +127,7 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
 			{xen:raw $editLink}
 		</xen:html>
 	</xen:checkboxunit>
+	{xen:raw $litespeedcacheXF_nocacheuri}
 	<input hidden id="lscacheLoginCookieDesc" value='{xen:phrase lscache_logincookiedesc}'/>
 	<input hidden id="lscacheRewritePre" value='{xen:phrase lscache_rewritepre}'/>
 	<input hidden id="lscacheRewritePost" value='{xen:phrase lscache_rewritepost}'/>
@@ -230,6 +231,13 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
       <sub_options></sub_options>
       <relation group_id="LiteSpeedCacheXF" display_order="1"/>
     </option>
+    <option option_id="litespeedcacheXF_nocacheuri" edit_format="textbox" data_type="string" can_backup="1" validation_class="Litespeedcache_Options" validation_method="verifyDoNotCacheUri">
+      <default_value></default_value>
+      <edit_format_params>rows=2
+inputclass=Elastic</edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="LiteSpeedCacheXF" display_order="50"/>
+    </option>
     <option option_id="litespeedcacheXF_publicttl" edit_format="textbox" data_type="integer" can_backup="1" validation_class="Litespeedcache_Options" validation_method="verifyPublicTTL">
       <default_value>28800</default_value>
       <edit_format_params></edit_format_params>
@@ -279,12 +287,23 @@ RewriteRule .* - [E="cache-vary:
     <phrase title="lscache_verifysetup_success" version_id="5" version_string="1.0.3.1"><![CDATA[Setup verification complete]]></phrase>
     <phrase title="option_group_LiteSpeedCacheXF" version_id="1" version_string="1.0.0"><![CDATA[Litespeed Cache]]></phrase>
     <phrase title="option_group_LiteSpeedCacheXF_description" version_id="1" version_string="1.0.2"><![CDATA[These options control various aspects of the LiteSpeed Cache.]]></phrase>
-    <phrase title="option_litespeedcacheXF_cacheprefix" version_id="7" version_string="1.0.4"><![CDATA[Cache Prefix]]></phrase>
-    <phrase title="option_litespeedcacheXF_cacheprefix_explain" version_id="7" version_string="1.0.4"><![CDATA[Add an alpha-numeric prefix to cache and purge tags.This can be used to prevent issues when using multiple LiteSpeed caching extensions on the same server.]]></phrase>
+    <phrase title="option_litespeedcacheXF_cacheprefix" version_id="5" version_string="1.0.3.1"><![CDATA[Cache Prefix]]></phrase>
+    <phrase title="option_litespeedcacheXF_cacheprefix_explain" version_id="5" version_string="1.0.3.1"><![CDATA[Add an alpha-numeric prefix to cache and purge tags.This can be used to prevent issues when using multiple LiteSpeed caching extensions on the same server.]]></phrase>
     <phrase title="option_litespeedcacheXF_homettl" version_id="1" version_string="1.0.2"><![CDATA[Home Page TTL (seconds)]]></phrase>
     <phrase title="option_litespeedcacheXF_homettl_explain" version_id="1" version_string="1.0.2"><![CDATA[Maximum time in seconds before the home page/forum list is considered stale.]]></phrase>
     <phrase title="option_litespeedcacheXF_logincookie" version_id="1" version_string="1.0.3"><![CDATA[Login Cookie]]></phrase>
     <phrase title="option_litespeedcacheXF_logincookie_explain" version_id="1" version_string="1.0.3"><![CDATA[Default value is _lscache_vary. Customize the Login Cookie name used by the plugin to determine if the visitor is logged in.]]></phrase>
+    <phrase title="option_litespeedcacheXF_nocacheuri" version_id="7" version_string="1.0.4"><![CDATA[Do Not Cache URI]]></phrase>
+    <phrase title="option_litespeedcacheXF_nocacheuri_explain" version_id="7" version_string="1.0.4"><![CDATA[Enter a list of urls that you do not want to have cached.
+The urls will be compared to the REQUEST_URI server variable.
+There should only be one url per line.<br><br>
+NOTE: URLs must start with a '/' to be correctly matched.<br>
+To do an exact match, add '$' to the end of the URL.
+Any surrounding whitespaces will be trimmed.<br><br>
+e.g. to exclude http://www.example.com/excludethis.php, you would have:<br>
+/excludethis.php<br><br>
+Similarly, to exclude http://www.example.com/blog/excludethis.php(accessed with the /blog), you would have:<br>
+/blog/excludethis.php]]></phrase>
     <phrase title="option_litespeedcacheXF_publicttl" version_id="1" version_string="1.0.0"><![CDATA[Public TTL (seconds)]]></phrase>
     <phrase title="option_litespeedcacheXF_publicttl_explain" version_id="1" version_string="1.0.0"><![CDATA[Maximum time in seconds before a cached item is considered stale.]]></phrase>
     <phrase title="option_litespeedcacheXF_separatemobile" version_id="1" version_string="1.0.3"><![CDATA[Separate Cache Entry for Mobile]]></phrase>

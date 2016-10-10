@@ -213,6 +213,56 @@ class Litespeedcache_Listener_Global
 		return $prefix . $tag;
 	}
 
+	private static function uriExcluded($excludes_list, $uri)
+	{
+		$uri_len = strlen( $uri ) ;
+		foreach( $excludes_list as $excludes_rule )
+		{
+			$rule_len = strlen( $excludes_rule );
+			if (($excludes_rule[$rule_len - 1] == '$')) {
+				if ($uri_len != (--$rule_len)) {
+					continue;
+				}
+			}
+			elseif ( $uri_len < $rule_len ) {
+				continue;
+			}
+
+			if ( strncmp( $uri, $excludes_rule, $rule_len ) == 0 ){
+				return true ;
+			}
+		}
+		return false;
+	}
+
+	private static function checkCacheable($request, $options)
+	{
+		$is_mobile = XenForo_Visitor::isBrowsingWith('mobile');
+		if (!$request->isGet()) {
+			error_log('Request is not a GET request. Do not cache.');
+			return false;
+		}
+
+		if ($options->litespeedcacheXF_separatemobile) {
+			if ($request->getServer('LSCACHE_VARY_VALUE') === 'ismobile') {
+				if (!$is_mobile) {
+					return false;
+				}
+			}
+			elseif ($is_mobile) {
+				return false;
+			}
+		}
+
+		if (!empty($options->litespeedcacheXF_nocacheuri)) {
+			$excludeList = explode("\n", $options->litespeedcacheXF_nocacheuri);
+			if (self::uriExcluded($excludeList, $request->getRequestUri())) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	/**
 	 * Front Controller Post View event listener.
 	 * Checks if the cache is enabled and the user is not logged in.
@@ -233,7 +283,6 @@ class Litespeedcache_Listener_Global
 		$cacheable = true;
 		$uri = $request->getRequestUri();
 		$options = XenForo_Application::getOptions();
-		$is_mobile = XenForo_Visitor::isBrowsingWith('mobile');
 		$serverVary = $request->getServer(self::COOKIE_LSCACHE_VARY_NAME);
 
 		if ((XenForo_Visitor::getUserId())
@@ -259,21 +308,8 @@ class Litespeedcache_Listener_Global
 			self::$currentVary = self::COOKIE_LSCACHE_VARY_DEFAULT;
 		}
 
-		if (($cacheable) && (!$request->isGet())) {
-			$cacheable = false;
-			error_log('Request is not a GET request. Do not cache.');
-		}
-
-		if (($cacheable)
-				&& ($options->litespeedcacheXF_separatemobile)) {
-			if ($request->getServer('LSCACHE_VARY_VALUE') === 'ismobile') {
-				if (!$is_mobile) {
-					$cacheable = false;
-				}
-			}
-			elseif ($is_mobile) {
-				$cacheable = false;
-			}
+		if ($cacheable) {
+			$cacheable = self::checkCacheable($request, $options);
 		}
 
 		if ( $cacheable ) {

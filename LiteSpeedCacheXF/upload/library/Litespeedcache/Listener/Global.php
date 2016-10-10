@@ -259,6 +259,11 @@ class Litespeedcache_Listener_Global
 			self::$currentVary = self::COOKIE_LSCACHE_VARY_DEFAULT;
 		}
 
+		if (($cacheable) && (!$request->isGet())) {
+			$cacheable = false;
+			error_log('Request is not a GET request. Do not cache.');
+		}
+
 		if (($cacheable)
 				&& ($options->litespeedcacheXF_separatemobile)) {
 			if ($request->getServer('LSCACHE_VARY_VALUE') === 'ismobile') {
@@ -577,6 +582,10 @@ class Litespeedcache_Listener_Global
 
 		switch ($noPrefix) {
 			case 'Login':
+				if ($action == 'TwoStep') {
+					self::setNotCacheable('Two Step Auth.');
+					break;
+				}
 				if (($action != 'Login')
 						|| (!self::isLoginSuccess($controllerResponse))) {
 					break;

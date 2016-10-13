@@ -575,7 +575,7 @@ class Litespeedcache_Listener_Global
 			'D', // Delete
 			'F', // Facebook, FacebookRegister
 			'G', // Google, GoogleRegister
-			'L', // Login
+			'L', // Login, Like, Likes
 			'S', // Save, SaveInline, Style, Language
 			'T', // Twitter, TwitterRegister
 		);
@@ -663,7 +663,8 @@ class Litespeedcache_Listener_Global
 				break;
 			case 'Post':
 				// If edit post or delete post, purge cache.
-				if (($action == 'SaveInline') || ($action == 'Delete')) {
+				if (($action == 'SaveInline') || ($action == 'Delete')
+					|| ($action == 'Like')) {
 					self::purgeByPostId($controller);
 				}
 				break;

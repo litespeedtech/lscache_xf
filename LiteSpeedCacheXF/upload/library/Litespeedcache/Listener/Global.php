@@ -54,7 +54,9 @@ class Litespeedcache_Listener_Global
 	 */
 	public static function lscache_enabled()
 	{
-		return (isset($_SERVER['X-LSCACHE']) && $_SERVER['X-LSCACHE']);
+		return ((isset($_SERVER['X-LSCACHE']) && $_SERVER['X-LSCACHE'])
+			|| ((isset($_SERVER['HTTP_X_LSCACHE']))
+				&& ($_SERVER['HTTP_X_LSCACHE'])));
 	}
 
 	/**

@@ -10,8 +10,8 @@
  * Copyright (C) 2016 LiteSpeed Technologies, Inc.
  */
 
-class Litespeedcache_Extend_XenForo_Model_User extends
-XFCP_Litespeedcache_Extend_XenForo_Model_User
+class Litespeedcache_Extend_XenForo_Model_User
+extends XFCP_Litespeedcache_Extend_XenForo_Model_User
 {
 
 	public function validateAuthentication( $nameOrEmail, $password, &$error = '' )

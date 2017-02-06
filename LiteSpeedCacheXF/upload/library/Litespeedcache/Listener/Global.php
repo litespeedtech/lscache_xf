@@ -574,6 +574,7 @@ class Litespeedcache_Listener_Global
 		$prefixlen = strlen($prefix);
 		$actionStart = array(
 			'A', // AddThread, AddReply, Approve
+			'B', // Bannedip
 			'D', // Delete
 			'F', // Facebook, FacebookRegister
 			'G', // Google, GoogleRegister
@@ -704,6 +705,16 @@ class Litespeedcache_Listener_Global
 					|| (strncmp($action, 'Google', 6) == 0)
 					|| (strncmp($action, 'Twitter', 7) == 0)) {
 					self::setNotCacheable('External login (e.g. Facebook).');
+				}
+				break;
+			case 'Error':
+				if ($action == 'Bannedip') {
+					self::setNotCacheable('Banned IP.');
+					$cookieConfig = XenForo_Application::get('config')->cookie;
+					$path = $cookieConfig->path;
+					$domain = $cookieConfig->domain;
+					setcookie('lsc_visitor', 1, time() + 3600, $path, $domain,
+						XenForo_Application::$secure, true);
 				}
 				break;
 			default:

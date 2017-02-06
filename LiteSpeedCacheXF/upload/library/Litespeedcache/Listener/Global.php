@@ -54,7 +54,10 @@ class Litespeedcache_Listener_Global
 	 */
 	public static function lscache_enabled()
 	{
-		return (isset($_SERVER['X-LSCACHE']) && $_SERVER['X-LSCACHE']);
+		return ((isset($_SERVER['X-LSCACHE']) && $_SERVER['X-LSCACHE'])
+				|| ((isset($_SERVER['HTTP_X_LSCACHE']))
+>                               && ($_SERVER['HTTP_X_LSCACHE'])));
+
 	}
 
 	/**
@@ -572,6 +575,7 @@ class Litespeedcache_Listener_Global
 		$prefixlen = strlen($prefix);
 		$actionStart = array(
 			'A', // AddThread, AddReply, Approve
+                        'B', // Bannedip
 			'D', // Delete
 			'F', // Facebook, FacebookRegister
 			'G', // Google, GoogleRegister
@@ -704,6 +708,14 @@ class Litespeedcache_Listener_Global
 					self::setNotCacheable('External login (e.g. Facebook).');
 				}
 				break;
+                        case 'Error':
+                                if ($action == 'Bannedip') {
+                                        self::setNotCacheable('Banned IP.');
+                                        $cookieConfig = XenForo_Application::get('config')->cookie;
+                                        $path = $cookieConfig->path;
+                                        $domain = $cookieConfig->domain;
+                                        setcookie('lsc_visitor', 1, time() + 3600, $path, $domain,
+                                                XenForo_Application::$secure, true);
 			default:
 				break;
 		}

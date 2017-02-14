@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<addon addon_id="LiteSpeedCacheXF" title="LiteSpeed Cache" version_string="1.0.4.2" version_id="9" url="https://www.litespeedtech.com/support/wiki/doku.php/litespeed_wiki:cache" install_callback_class="" install_callback_method="" uninstall_callback_class="" uninstall_callback_method="">
+<addon addon_id="LiteSpeedCacheXF" title="LiteSpeed Cache" version_string="1.0.4.3" version_id="10" url="https://www.litespeedtech.com/support/wiki/doku.php/litespeed_wiki:cache" install_callback_class="" install_callback_method="" uninstall_callback_class="" uninstall_callback_method="">
   <admin_navigation>
     <navigation navigation_id="actions" parent_navigation_id="lscache" display_order="1" link="lscache/actions" admin_permission_id="option" debug_only="0" hide_no_children="0"/>
     <navigation navigation_id="litespeedcache" parent_navigation_id="setup" display_order="110" link="" admin_permission_id="" debug_only="0" hide_no_children="0"/>
@@ -47,6 +47,8 @@
     </dd>
   </dl>
 </xen:form>
+<br>
+<p>Any feedback or questions about LiteSpeed Cache for XenForo? <a href="https://xenforo.com/community/resources/litespeed-cache-community.5047/" rel="noopener noreferrer" target="_blank">Click Here</a></p>
 <input hidden id="lscacheVerifyDiffDesc" value='{xen:phrase lscache_verifysetup_diff}'/>
 <input hidden id="lscacheVerifySameDesc" value='{xen:phrase lscache_verifysetup_same}'/>
 <input hidden id="lscacheRewritePre" value='{xen:phrase lscache_rewritepre}'/>
@@ -108,7 +110,12 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
 </textarea>
 </xen:form>]]></template>
     <template title="lscachesettings"><![CDATA[<xen:require css="lscache_acp.css" />
-<xen:title>{xen:phrase lscache_settingstitle}</xen:title>
+<xen:title>{xen:phrase lscache_settingstitle}
+<span style="font-size: 12px;float: right;">
+<a href="https://xenforo.com/community/resources/litespeed-cache-community.5047/" rel="noopener noreferrer" target="_blank">Questions? Click Here</a>
+</span>
+</xen:title>
+
 <div id="myImportantDiv" class="importantMessage lscache-hide" style="text-align:left">
 	<p id="myImportantMessage" class="lscache-hide"></p>
 	<br><br>
@@ -124,6 +131,22 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
 			</xen:option>
 		<xen:html>
 			<input type="hidden" name="{$listedFieldName}" value="{$lscacheoption_separatemobile.option_id}" />
+			{xen:raw $editLink}
+		</xen:html>
+	</xen:checkboxunit>
+	<xen:checkboxunit label="{$lscacheoption_purgelikes.title}" explain="{$lscacheoption_purgelikes.explain}">
+			<xen:option name="{$fieldPrefix}[{$lscacheoption_purgelikes.option_id}]" selected="{$lscacheoption_purgelikes.option_value}">
+			</xen:option>
+		<xen:html>
+			<input type="hidden" name="{$listedFieldName}" value="{$lscacheoption_purgelikes.option_id}" />
+			{xen:raw $editLink}
+		</xen:html>
+	</xen:checkboxunit>
+	<xen:checkboxunit label="{$lscacheoption_updatethreadviews.title}" explain="{xen:raw $lscacheoption_updatethreadviews.explain}">
+			<xen:option name="{$fieldPrefix}[{$lscacheoption_updatethreadviews.option_id}]" selected="{$lscacheoption_updatethreadviews.option_value}">
+			</xen:option>
+		<xen:html>
+			<input type="hidden" name="{$listedFieldName}" value="{$lscacheoption_updatethreadviews.option_id}" />
 			{xen:raw $editLink}
 		</xen:html>
 	</xen:checkboxunit>
@@ -234,7 +257,7 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
     <option option_id="litespeedcacheXF_nocacheuri" edit_format="textbox" data_type="string" can_backup="1" validation_class="Litespeedcache_Options" validation_method="verifyDoNotCacheUri">
       <default_value></default_value>
       <edit_format_params>rows=2
-inputclass=Elastic</edit_format_params>
+        inputclass=Elastic</edit_format_params>
       <sub_options></sub_options>
       <relation group_id="LiteSpeedCacheXF" display_order="50"/>
     </option>
@@ -244,11 +267,23 @@ inputclass=Elastic</edit_format_params>
       <sub_options></sub_options>
       <relation group_id="LiteSpeedCacheXF" display_order="10"/>
     </option>
+    <option option_id="litespeedcacheXF_purgelikes" edit_format="onoff" data_type="boolean" can_backup="1" validation_class="Litespeedcache_Options" validation_method="verifyPurgeLikes">
+      <default_value>0</default_value>
+      <edit_format_params></edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="LiteSpeedCacheXF" display_order="60"/>
+    </option>
     <option option_id="litespeedcacheXF_separatemobile" edit_format="onoff" data_type="boolean" can_backup="1" validation_class="Litespeedcache_Options" validation_method="verifySeparateMobile">
       <default_value>0</default_value>
       <edit_format_params></edit_format_params>
       <sub_options></sub_options>
       <relation group_id="LiteSpeedCacheXF" display_order="30"/>
+    </option>
+    <option option_id="litespeedcacheXF_updatethreadviews" edit_format="onoff" data_type="boolean" can_backup="1" validation_class="Litespeedcache_Options" validation_method="verifyUpdateThreadCount">
+      <default_value>0</default_value>
+      <edit_format_params></edit_format_params>
+      <sub_options></sub_options>
+      <relation group_id="LiteSpeedCacheXF" display_order="70"/>
     </option>
   </optiongroups>
   <permissions>
@@ -263,7 +298,7 @@ inputclass=Elastic</edit_format_params>
     <phrase title="admin_navigation_lscache_settings" version_id="1" version_string="1.0.2"><![CDATA[Settings]]></phrase>
     <phrase title="lscache_actionsdesc" version_id="1" version_string="1.0.2"><![CDATA[The following actions may be used to manage the LiteSpeed Cache.]]></phrase>
     <phrase title="lscache_actionstitle" version_id="1" version_string="1.0.2"><![CDATA[Actions]]></phrase>
-    <phrase title="lscache_logincookiedesc" version_id="1" version_string="1.0.3"><![CDATA[IMPORTANT: Because you changed the login cookie, please make sure to edit the .htaccess file or your rewrite rule location to include the following rule. If you already have a rewrite rule, please replace it.]]></phrase>
+    <phrase title="lscache_logincookiedesc" version_id="10" version_string="1.0.4.3"><![CDATA[IMPORTANT: Because you changed the login cookie, please make sure to edit the .htaccess file or your rewrite rule location to include the following rule. Please insert the rewrite rule within an <IfModule LiteSpeed></IfModule> block above any non-redirect rewrite rules with an [L] tag. If the LiteSpeed block does not exist, it should be created. If you already have a rewrite rule, please replace it.]]></phrase>
     <phrase title="lscache_managedesc" version_id="1" version_string="1.0.2"><![CDATA[This is the LiteSpeed Cache Control Panel. Certain controls are available for use here.]]></phrase>
     <phrase title="lscache_managetitle" version_id="1" version_string="1.0.2"><![CDATA[LiteSpeed Cache Control Panel]]></phrase>
     <phrase title="lscache_purge_all" version_id="1" version_string="1.0.2"><![CDATA[Purge All]]></phrase>
@@ -271,7 +306,7 @@ inputclass=Elastic</edit_format_params>
     <phrase title="lscache_purge_home" version_id="1" version_string="1.0.2"><![CDATA[Purge Home]]></phrase>
     <phrase title="lscache_purge_home_desc" version_id="1" version_string="1.0.2"><![CDATA[Purge Home will purge the home page/forum list from cache.]]></phrase>
     <phrase title="lscache_purge_success" version_id="1" version_string="1.0.2"><![CDATA[Purged the cache successfully.]]></phrase>
-    <phrase title="lscache_rewritedesc" version_id="1" version_string="1.0.2"><![CDATA[In order to properly display separate mobile views, the following rewrite rule must be added to the .htaccess file in addition to setting the option.]]></phrase>
+    <phrase title="lscache_rewritedesc" version_id="10" version_string="1.0.4.3"><![CDATA[In order to properly display separate mobile views, the following rewrite rule must be added to the .htaccess file in addition to setting the option. Please insert the rewrite rule within an <IfModule LiteSpeed></IfModule> block above any non-redirect rewrite rules with an [L] tag. If the LiteSpeed block does not exist, it should be created.]]></phrase>
     <phrase title="lscache_rewritepost" version_id="1" version_string="1.0.3"><![CDATA["]<br>
 ### LSCACHE END LOGIN COOKIE ###]]></phrase>
     <phrase title="lscache_rewritepre" version_id="1" version_string="1.0.3"><![CDATA[### LSCACHE START LOGIN COOKIE ###<br>
@@ -282,7 +317,7 @@ RewriteRule .* - [E="cache-vary:
     <phrase title="lscache_settingstitle" version_id="1" version_string="1.0.2"><![CDATA[LiteSpeed Cache Add-On Settings]]></phrase>
     <phrase title="lscache_verifysetup" version_id="1" version_string="1.0.3"><![CDATA[Verify Setup]]></phrase>
     <phrase title="lscache_verifysetup_desc" version_id="1" version_string="1.0.3"><![CDATA[Verify that your settings and rewrite rules match.]]></phrase>
-    <phrase title="lscache_verifysetup_diff" version_id="4" version_string="1.0.3"><![CDATA[IMPORTANT: Verification has determined that your cache vary rewrite rule may be incorrect. Verification checks your settings against this rewrite rule for the possibility of language vary, theme vary, and login cookie vary. To match your settings, your cache vary rewrite rule should include at least the following.]]></phrase>
+    <phrase title="lscache_verifysetup_diff" version_id="10" version_string="1.0.4.3"><![CDATA[IMPORTANT: Verification has determined that your cache vary rewrite rule may be incorrect. Verification checks your settings against this rewrite rule for the possibility of language vary, theme vary, and login cookie vary. To match your settings, your cache vary rewrite rule should include at least the following. Please insert the rewrite rule within an <IfModule LiteSpeed></IfModule> block above any non-redirect rewrite rules with an [L] tag. If the LiteSpeed block does not exist, it should be created.]]></phrase>
     <phrase title="lscache_verifysetup_same" version_id="4" version_string="1.0.3"><![CDATA[IMPORTANT: Verification has determined that your cache vary rewrite rule is correct and should work. Verification checks your settings against this rewrite rule for the possibility of language vary, theme vary, and login cookie vary.]]></phrase>
     <phrase title="lscache_verifysetup_success" version_id="5" version_string="1.0.3.1"><![CDATA[Setup verification complete]]></phrase>
     <phrase title="option_group_LiteSpeedCacheXF" version_id="1" version_string="1.0.0"><![CDATA[Litespeed Cache]]></phrase>
@@ -306,14 +341,22 @@ Similarly, to exclude http://www.example.com/blog/excludethis.php(accessed with 
 /blog/excludethis.php]]></phrase>
     <phrase title="option_litespeedcacheXF_publicttl" version_id="1" version_string="1.0.0"><![CDATA[Public TTL (seconds)]]></phrase>
     <phrase title="option_litespeedcacheXF_publicttl_explain" version_id="1" version_string="1.0.0"><![CDATA[Maximum time in seconds before a cached item is considered stale.]]></phrase>
+    <phrase title="option_litespeedcacheXF_purgelikes" version_id="7" version_string="1.0.4"><![CDATA[Purge Likes/Dislikes]]></phrase>
+    <phrase title="option_litespeedcacheXF_purgelikes_explain" version_id="7" version_string="1.0.4"><![CDATA[Purges the thread on a reply like/dislike.]]></phrase>
     <phrase title="option_litespeedcacheXF_separatemobile" version_id="1" version_string="1.0.3"><![CDATA[Separate Cache Entry for Mobile]]></phrase>
     <phrase title="option_litespeedcacheXF_separatemobile_explain" version_id="1" version_string="1.0.3"><![CDATA[Some plugins have different views based on whether the visitor is using a mobile device or not. If the desktop and mobile views are different, use this option to cache them separately.]]></phrase>
+    <phrase title="option_litespeedcacheXF_updatethreadviews" version_id="7" version_string="1.0.4"><![CDATA[Update Guest Thread Views]]></phrase>
+    <phrase title="option_litespeedcacheXF_updatethreadviews_explain" version_id="7" version_string="1.0.4"><![CDATA[This options will enable updating the view counter when guests view a thread. If unchecked, guest view counts will not be counted.<br>
+<b>NOTICE:</b> This may degrade performance. Please make certain that this is a required feature before checking this box.]]></phrase>
   </phrases>
   <route_prefixes>
     <route_type type="admin">
       <prefix original_prefix="lscache" class="Litespeedcache_Route_PrefixAdmin_Management" build_link="none"/>
       <prefix original_prefix="lscache-settings" class="Litespeedcache_Route_PrefixAdmin_Settings" build_link="data_only"/>
       <prefix original_prefix="lscacherewrite" class="Litespeedcache_Route_PrefixAdmin_Rewrite" build_link="data_only"/>
+    </route_type>
+    <route_type type="public">
+      <prefix original_prefix="lscacheupdate" class="Litespeedcache_Route_Prefix_Update" build_link="none"/>
     </route_type>
   </route_prefixes>
   <style_properties/>

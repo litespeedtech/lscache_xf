@@ -137,6 +137,44 @@ class Litespeedcache_Options
 		return true;
 	}
 
+	/**
+	 * Verify that the Separate Cache Entry for Mobile option is
+	 * a valid setting.
+	 *
+	 * @param type $separateMobile
+	 * @param XenForo_DataWriter $dw
+	 * @param type $fieldname
+	 * @return boolean
+	 */
+	public static function verifyPurgeLikes( $purgeLikes,
+		XenForo_DataWriter $dw, $fieldname )
+	{
+		if (($purgeLikes != 0) && ($purgeLikes != 1)) {
+			$dw->error(new XenForo_Phrase('Purge Likes setting is an'
+				. ' impossible value.'), $fieldname);
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Verify that the Update Thread Count option is a valid setting.
+	 *
+	 * @param type $updateThreadCount
+	 * @param XenForo_DataWriter $dw
+	 * @param type $fieldname
+	 * @return boolean
+	 */
+	public static function verifyUpdateThreadCount( $updateThreadCount,
+		XenForo_DataWriter $dw, $fieldname )
+	{
+		if (($updateThreadCount != 0) && ($updateThreadCount != 1)) {
+			$dw->error(new XenForo_Phrase('Purge Likes setting is an'
+				. ' impossible value.'), $fieldname);
+			return false;
+		}
+		return true;
+	}
 
 	/**
 	 * Verify that the Do Not Cache URI option is a valid setting.

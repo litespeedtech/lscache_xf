@@ -125,6 +125,7 @@ RewriteRule .* - [E=Cache-Control:vary=ismobile]
 	{xen:raw $litespeedcacheXF_homettl}
 	{xen:raw $litespeedcacheXF_publicttl}
 	{xen:raw $litespeedcacheXF_logincookie}
+	{xen:raw $litespeedcacheXF_cacheprefix}
 	<xen:checkboxunit label="{$lscacheoption_separatemobile.title}" explain="{$lscacheoption_separatemobile.explain}">
 			<xen:option name="{$fieldPrefix}[{$lscacheoption_separatemobile.option_id}]" selected="{$lscacheoption_separatemobile.option_value}">
 				<a href={xen:adminlink lscacherewrite} id="lscacheSeparateMobile2" class="OverlayTrigger">(more info)</a>

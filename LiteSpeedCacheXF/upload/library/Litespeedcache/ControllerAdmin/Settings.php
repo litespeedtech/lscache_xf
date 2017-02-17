@@ -15,12 +15,24 @@ class Litespeedcache_ControllerAdmin_Settings extends XenForo_ControllerAdmin_Ab
 		$viewParams = array(
 			'lscacheoption_separatemobile' => $optionModel->prepareOption(
 				$optionModel->getOptionById('litespeedcacheXF_separatemobile')),
+			'lscacheoption_purgelikes' => $optionModel->prepareOption(
+				$optionModel->getOptionById('litespeedcacheXF_purgelikes')),
+			'lscacheoption_updatethreadviews' => $optionModel->prepareOption(
+				$optionModel->getOptionById('litespeedcacheXF_updatethreadviews')),
 			'fieldPrefix' => $fieldPrefix,
 			'listedFieldName' => $fieldPrefix . '_listed[]',
 			'options' => $optionModel->prepareOptions(
-					$optionModel->getOptionsByIds(array('litespeedcacheXF_homettl',
-					'litespeedcacheXF_publicttl', 'litespeedcacheXF_logincookie',
-					'litespeedcacheXF_separatemobile', 'litespeedcacheXF_nocacheuri'))),
+					$optionModel->getOptionsByIds(
+						array(
+							'litespeedcacheXF_homettl',
+							'litespeedcacheXF_publicttl',
+							'litespeedcacheXF_logincookie',
+							'litespeedcacheXF_cacheprefix',
+							'litespeedcacheXF_separatemobile',
+							'litespeedcacheXF_nocacheuri',
+							'litespeedcacheXF_purgelikes',
+							'litespeedcacheXF_updatethreadviews',
+						))),
 			'canEditOptionDefinition' => $optionModel->canEditOptionAndGroupDefinitions()
 		);
 

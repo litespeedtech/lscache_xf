@@ -398,7 +398,19 @@ class Litespeedcache_Listener_Global
 				break;
 			case 'thread_view_form_before':
 				$thread = $hookParams['thread'];
-				self::$cacheTags[] = self::CACHETAG_THREAD . $thread['thread_id'];
+				$tid = $thread['thread_id'];
+				self::$cacheTags[] = self::CACHETAG_THREAD . $tid;
+				if ((XenForo_Visitor::getUserId() === 0)
+					&& (self::checkCheckbox('litespeedcacheXF_updatethreadviews'))) {
+					$contents .=
+						"<script>
+var xhr = new XMLHttpRequest();
+xhr.open('POST', 'lscacheupdate');
+xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+xhr.send(encodeURI('tid=$tid'));
+</script>";
+				}
 				break;
 			case 'forum_list_nodes':
 				self::$cacheTags[] = self::CACHETAG_FORUMLIST;
@@ -554,6 +566,45 @@ class Litespeedcache_Listener_Global
 	}
 
 	/**
+	 * Helper function that checks certain conditions to see if the current
+	 * request is a 'like' action and if we should purge the post.
+	 *
+	 * @param $action The current action
+	 * @param $controllerResponse The response to send.
+	 * @return bool True if need to purge, false otherwise.
+	 */
+	private static function checkLikes($action, $controllerResponse)
+	{
+		if ($action != 'Like') {
+			return false;
+		}
+		if (!self::checkCheckbox('litespeedcacheXF_purgelikes')) {
+			return false;
+		}
+		return ($controllerResponse->viewName
+			!== 'XenForo_ViewPublic_Post_Like');
+	}
+
+	/**
+	 * Helper function that checks certain conditions to see if the current
+	 * request is a 'like' action and if we should purge the post.
+	 *
+	 * @param $action The current action
+	 * @param $controllerResponse The response to send.
+	 * @return bool True if need to purge, false otherwise.
+	 */
+	private static function checkCheckbox($optionName)
+	{
+		$options = XenForo_Application::getOptions();
+		if ((empty($options))
+			|| (!isset($options->$optionName))
+			|| ($options->$optionName != true)) {
+			return false;
+		}
+		return true;
+	}
+
+	/**
 	 * Controller Post Dispatch Event Listener.
 	 * This will listen for the login controller + action and
 	 * any purge controller + action.
@@ -667,7 +718,7 @@ class Litespeedcache_Listener_Global
 			case 'Post':
 				// If edit post or delete post, purge cache.
 				if (($action == 'SaveInline') || ($action == 'Delete')
-					|| ($action == 'Like')) {
+					|| (self::checkLikes($action, $controllerResponse))) {
 					self::purgeByPostId($controller);
 				}
 				break;

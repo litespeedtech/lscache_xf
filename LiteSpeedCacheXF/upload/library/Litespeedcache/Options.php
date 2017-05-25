@@ -22,7 +22,7 @@ class Litespeedcache_Options
 	 */
 	public static function verifyLSCache()
 	{
-		$link = 'https://www.litespeedtech.com/solutions/other-web-application-acceleration/lscxf';
+		$link = 'https://www.litespeedtech.com/products/cache-plugins/other-web-app-acceleration#lscxf';
 		if ( Litespeedcache_Listener_Global::lscache_enabled() ) {
 			return;
 		}

@@ -31,7 +31,7 @@ class Litespeedcache_Listener_Global
 	const FLAG_LOGINCOOKIECHANGED = 2;
 
 	private static $userState = 0 ;
-	private static $currentVary ;
+	private static $currentVary = '';
 	private static $cacheTags = array();
 	private static $purgeTags = array();
 	private static $flags = 0;
@@ -294,21 +294,8 @@ class Litespeedcache_Listener_Global
 			$cacheable = false;
 		}
 
-		if (($serverVary)
-			&& ($options->litespeedcacheXF_logincookie != self::COOKIE_LSCACHE_VARY_DEFAULT)) {
-			if (in_array($options->litespeedcacheXF_logincookie,
-				explode(',', $serverVary))) {
-				self::$currentVary = $options->litespeedcacheXF_logincookie;
-			}
-			else {
-				$cacheable = false;
-				error_log('XenForo login cookie setting does not match'
-					. ' server rewrite rule. Do not cache.');
-			}
-		}
-		else {
-			self::$currentVary = self::COOKIE_LSCACHE_VARY_DEFAULT;
-		}
+		self::$currentVary = self::determineCurrentVary($options,
+				$serverVary, $cacheable);
 
 		if ($cacheable) {
 			$cacheable = self::checkCacheable($request, $options);
@@ -629,6 +616,7 @@ xhr.send(encodeURI('tid=$tid'));
 			'D', // Delete
 			'F', // Facebook, FacebookRegister
 			'G', // Google, GoogleRegister
+			'I', // Index - happens at logout
 			'L', // Login, Like, Likes
 			'S', // Save, SaveInline, Style, Language
 			'T', // Twitter, TwitterRegister
@@ -684,6 +672,25 @@ xhr.send(encodeURI('tid=$tid'));
 				if ($controller->getInput()->filterSingle('remember',
 						XenForo_Input::UINT)) {
 					self::setUserState(self::STATE_STAYLOGGEDIN);
+				}
+				break;
+			case 'Logout':
+				if ($action != 'Index') {
+					break;
+				}
+				$request = $controller->getRequest();
+				$options = XenForo_Application::getOptions();
+				$serverVary = $request->getServer(
+						self::COOKIE_LSCACHE_VARY_NAME);
+
+				//Give some filler value for $cacheable - don't care here,
+				//we're explicitly deleting the cookie.
+				$cacheable = true;
+				self::$currentVary = self::determineCurrentVary(
+						$options, $serverVary, $cacheable);
+
+				if ( isset($_COOKIE[self::$currentVary]) ) {
+					self::setCacheVaryCookie(false);
 				}
 				break;
 			case 'Thread':
@@ -772,6 +779,40 @@ xhr.send(encodeURI('tid=$tid'));
 				break;
 		}
 	}
-}
 
+	/**
+	 * Helper function that determines the LiteSpeed Cache Vary
+	 * cookie name.
+	 *
+	 * @param $options - the currently set options.
+	 * @param $serverVary - what the server thinks the vary is.
+	 * @param $cacheable - shouldn't be cacheable if there's an error.
+	 * @return the value that currentVary is/should be.
+	 */
+	private static function determineCurrentVary($options, $serverVary, &$cacheable)
+	{
+		if (!empty(self::$currentVary)) {
+			return self::$currentVary;
+		}
+		if (($serverVary)
+				&& ($options->litespeedcacheXF_logincookie != self::COOKIE_LSCACHE_VARY_DEFAULT)) {
+			if (in_array($options->litespeedcacheXF_logincookie,
+					explode(',', $serverVary))) {
+				self::$currentVary = $options->litespeedcacheXF_logincookie;
+				return self::$currentVary;
+			}
+			else {
+				$cacheable = false;
+				error_log('XenForo login cookie setting does not match'
+						. ' server rewrite rule. Do not cache.');
+				return null;
+			}
+		}
+		else {
+			self::$currentVary = self::COOKIE_LSCACHE_VARY_DEFAULT;
+			return self::$currentVary;
+		}
+	}
+
+}
 

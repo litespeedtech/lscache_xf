@@ -294,8 +294,13 @@ class Litespeedcache_Listener_Global
 			$cacheable = false;
 		}
 
-		self::$currentVary = self::determineCurrentVary($options,
-				$serverVary, $cacheable);
+		self::determineCurrentVary($options, $serverVary);
+
+		if (empty(self::$currentVary)) {
+			//If current vary was not set in determineCurrentVary,
+			//we hit the error block and it should not be cacheable.
+			$cacheable = false;
+		}
 
 		if ($cacheable) {
 			$cacheable = self::checkCacheable($request, $options);
@@ -675,22 +680,14 @@ xhr.send(encodeURI('tid=$tid'));
 				}
 				break;
 			case 'Logout':
-				if ($action != 'Index') {
-					break;
-				}
-				$request = $controller->getRequest();
-				$options = XenForo_Application::getOptions();
-				$serverVary = $request->getServer(
-						self::COOKIE_LSCACHE_VARY_NAME);
-
-				//Give some filler value for $cacheable - don't care here,
-				//we're explicitly deleting the cookie.
-				$cacheable = true;
-				self::$currentVary = self::determineCurrentVary(
-						$options, $serverVary, $cacheable);
-
-				if ( isset($_COOKIE[self::$currentVary]) ) {
-					self::setCacheVaryCookie(false);
+				if ($action == 'Index') {
+					$request = $controller->getRequest();
+					$options = XenForo_Application::getOptions();
+					$serverVary = $request->getServer(self::COOKIE_LSCACHE_VARY_NAME);
+					self::determineCurrentVary($options, $serverVary);
+					if ( isset($_COOKIE[self::$currentVary]) ) {
+						self::setCacheVaryCookie(false);
+					}
 				}
 				break;
 			case 'Thread':
@@ -786,31 +783,29 @@ xhr.send(encodeURI('tid=$tid'));
 	 *
 	 * @param $options - the currently set options.
 	 * @param $serverVary - what the server thinks the vary is.
-	 * @param $cacheable - shouldn't be cacheable if there's an error.
-	 * @return the value that currentVary is/should be.
 	 */
-	private static function determineCurrentVary($options, $serverVary, &$cacheable)
+	private static function determineCurrentVary($options, $serverVary)
 	{
+
 		if (!empty(self::$currentVary)) {
-			return self::$currentVary;
+			//If already set, just return.
+			return;
 		}
 		if (($serverVary)
-				&& ($options->litespeedcacheXF_logincookie != self::COOKIE_LSCACHE_VARY_DEFAULT)) {
+			&& ($options->litespeedcacheXF_logincookie != self::COOKIE_LSCACHE_VARY_DEFAULT)) {
+			//Is there a name other than default according to server? If yes, get that one.
 			if (in_array($options->litespeedcacheXF_logincookie,
-					explode(',', $serverVary))) {
+				explode(',', $serverVary))) {
 				self::$currentVary = $options->litespeedcacheXF_logincookie;
-				return self::$currentVary;
 			}
 			else {
-				$cacheable = false;
 				error_log('XenForo login cookie setting does not match'
-						. ' server rewrite rule. Do not cache.');
-				return null;
+					. ' server rewrite rule. Do not cache.');
 			}
 		}
 		else {
+			//Didn't find anything in server
 			self::$currentVary = self::COOKIE_LSCACHE_VARY_DEFAULT;
-			return self::$currentVary;
 		}
 	}
 

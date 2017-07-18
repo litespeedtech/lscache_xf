@@ -597,6 +597,27 @@ xhr.send(encodeURI('tid=$tid'));
 	}
 
 	/**
+	 * Helper function that sets a bad user cookie and sets not cacheable.
+	 *
+	 * A "bad user" can be a banned IP or a discouraged IP, for example.
+	 * The lsc-visitor cookie is not used by the plugin per se. This is
+	 * provided for people that may want to handle banned users differently,
+	 * instead of making it do not cache always (e.g. 403 if the cookie is set)
+	 *
+	 * @param $reason The reason for the page not being cacheable (bad user)
+	 * @return void
+	 */
+	private static function dncBadUser($reason)
+	{
+		self::setNotCacheable($reason);
+		$cookieConfig = XenForo_Application::get('config')->cookie;
+		$path = $cookieConfig->path;
+		$domain = $cookieConfig->domain;
+		setcookie('lsc_visitor', 1, time() + 3600, $path, $domain,
+			XenForo_Application::$secure, true);
+	}
+
+	/**
 	 * Controller Post Dispatch Event Listener.
 	 * This will listen for the login controller + action and
 	 * any purge controller + action.
@@ -661,6 +682,12 @@ xhr.send(encodeURI('tid=$tid'));
 				break;
 			default:
 				return;
+		}
+
+		if (XenForo_Application::isRegistered('discourageChecked'))
+		{
+			self::dncBadUser('User/IP is discouraged.');
+			return;
 		}
 
 		switch ($noPrefix) {
@@ -764,12 +791,7 @@ xhr.send(encodeURI('tid=$tid'));
 				break;
 			case 'Error':
 				if ($action == 'Bannedip') {
-					self::setNotCacheable('Banned IP.');
-					$cookieConfig = XenForo_Application::get('config')->cookie;
-					$path = $cookieConfig->path;
-					$domain = $cookieConfig->domain;
-					setcookie('lsc_visitor', 1, time() + 3600, $path, $domain,
-						XenForo_Application::$secure, true);
+					self::dncBadUser('Banned IP.');
 				}
 				break;
 			default:
